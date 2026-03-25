@@ -7,7 +7,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-vue": "^7.3.1",
+    "@ckeditor/ckeditor5-vue": "^7.4.0",
     "@codemirror/language-data": "^6.5.2",
     "@viur/shoelace": "^1.0.15-v2.20.1",
     "@viur/webawesome": "^0.10.0",
@@ -18,17 +18,17 @@
     "json-editor-vue": "^0.18.1",
     "libphonenumber-js": "^1.12.40",
     "logics-js": "^0.4.1",
-    "pinia": "^2.3.0",
+    "pinia": "^2.3.0 || ^3.0.4",
     "rollup-plugin-copy": "^3.5.0",
     "viur-ui": "file:..",
-    "vue": "^3.3.0",
+    "vue": "^3.5.31",
     "vue-draggable-plus": "^0.6.1",
-    "vue-i18n": "^11.0.1",
+    "vue-i18n": "^11.3.0",
     "vue-json-pretty": "^2.6.0",
-    "vue-router": "^4.5.0"
+    "vue-router": "^5.0.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.0",
-    "vite": "^5.0.0"
+    "@vitejs/plugin-vue": "^6.0.5",
+    "vite": "^8.0.2"
   }
 }

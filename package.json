@@ -10,22 +10,22 @@
     "index.d.ts"
   ],
   "dependencies": {
-    "destr": "^2.0.3",
+    "destr": "^2.0.5",
     "json-editor-vue": "^0.18.1",
-    "libphonenumber-js": "^1.11.17",
+    "libphonenumber-js": "^1.12.40",
     "logics-js": "^0.4.1",
-    "vue-draggable-plus": "^0.6.0",
-    "vue-json-pretty": "^2.4.0"
+    "vue-draggable-plus": "^0.6.1",
+    "vue-json-pretty": "^2.6.0"
   },
   "peerDependencies": {
     "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@codemirror/language-data": "^6.5.2",
-    "@viur/shoelace": ">=1.0.0",
+    "@viur/shoelace": ">=1.0.0-0",
     "@viur/webawesome": ">=0.10.0",
-    "@vueuse/core": "^12.4.0",
+    "@vueuse/core": "^12.4.0 || ^13.0.0 || ^14.0.0",
     "ckeditor5": "^45.2.0",
     "codemirror": "^6.0.1",
-    "pinia": "^2.3.0 || ^3.0.0",
+    "pinia": "^2.3.0 || ^3.0.4",
     "vue": "^3.3.0",
     "vue-i18n": "^11.0.1",
     "vue-router": "^4.5.0"
@@ -36,10 +36,14 @@
   },
   "devDependencies": {
     "@vueuse/core": "^14.2.1",
-    "fake-indexeddb": "^6.0.0",
-    "happy-dom": "^14.0.0",
-    "vitest": "^2.0.0",
-    "vue": "^3.5.30"
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^20.8.8",
+    "vitest": "^4.1.1",
+    "vue": "^3.5.31",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-vue": "^10.8.0"
   },
   "peerDependenciesMeta": {
     "@ckeditor/ckeditor5-vue": {
@@ -52,6 +56,9 @@
       "optional": true
     },
     "codemirror": {
+      "optional": true
+    },
+    "@viur/shoelace": {
       "optional": true
     }
   }

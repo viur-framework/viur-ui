@@ -457,6 +457,7 @@ provide("boneState", state)
  */
 function ensureKeys(arr) {
   for (const it of arr) {
+    // null entries occur, e.g. an empty spatial value [null, null]
     if (it && typeof it === "object" && !it._key) {
       it._key = crypto.randomUUID()
     }

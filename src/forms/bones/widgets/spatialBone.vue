@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, inject, computed } from "vue"
+import { reactive, onMounted, inject, computed, watch } from "vue"
 /**
  * Coordinate input for geographic points (latitude / longitude).
  *
@@ -101,11 +101,18 @@ function changeEvent() {
   emit("change", props.name, [state.valueLat, state.valueLng], props.lang, props.index)
 }
 
-onMounted(() => {
+function readValue() {
   try {
     state.valueLat = props.value[0]
     state.valueLng = props.value[1]
   } catch (e) {}
+}
+
+// The value can change from outside, e.g. when the address widget geocodes.
+watch(() => props.value, readValue)
+
+onMounted(() => {
+  readValue()
   emit("change", props.name, [state.valueLat, state.valueLng], props.lang, props.index) //init
 })
 </script>

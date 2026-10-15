@@ -7,6 +7,7 @@ import selectBone from "./widgets/selectBone.vue"
 import booleanBone from "./widgets/booleanBone.vue"
 import passwordBone from "./widgets/passwordBone.vue"
 import recordBone from "./widgets/recordBone.vue"
+import addressBone from "./widgets/addressBone.vue"
 import colorBone from "./widgets/colorBone.vue"
 import numericBone from "./widgets/numericBone.vue"
 import relationalBone from "./widgets/relationalBone.vue"
@@ -59,6 +60,7 @@ export const useBoneStore = defineStore("boneStore", () => {
       selectBone,
       passwordBone,
       recordBone,
+      addressBone,
       numericBone,
       colorBone,
       relationalBone,
@@ -111,6 +113,8 @@ export const useBoneStore = defineStore("boneStore", () => {
       return booleanBone
     } else if (boneType === "password" || boneType.startsWith("password.")) {
       return passwordBone
+    } else if (boneType === "record.address" || boneType.startsWith("record.address.")) {
+      return addressBone
     } else if (boneType === "record" || boneType.startsWith("record.")) {
       return recordBone
     } else if (boneType === "numeric" || boneType.startsWith("numeric.")) {

@@ -47,3 +47,6 @@ export { default as boneLogic } from "./src/forms/bones/view/boneLogic.js"
 
 // Safe HTML rendering (DOMPurify): v-safe-html directive + sanitizeHtml()
 export { default as safeHtml, sanitizeHtml, vSafeHtml } from "./src/vite/safeHtml.js"
+
+// Map + geocoder for the address widget (record.address), provided by the app
+export { setAddressProvider } from "./src/forms/bones/address.js"

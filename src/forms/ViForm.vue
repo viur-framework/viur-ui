@@ -245,6 +245,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // with `bones`: send only those bones (plus key), not every writable bone of the structure
+  sendOnlyShownBones: {
+    type: Boolean,
+    default: false,
+  },
   internal: {
     type: [Object, null],
     default: null,

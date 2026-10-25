@@ -38,6 +38,8 @@ export interface ViFormProps {
   collapsedCategories?: string[]
   categoryDefaultname?: string
   readonly?: boolean
+  /** With `bones`: send only those bones (plus key) instead of every writable bone. */
+  sendOnlyShownBones?: boolean
   /**
    * Layout component that places the bones (default: LayoutCategory). It renders
    * its default slot once per bone with `{ boneName, widget, visible?, label? }`.

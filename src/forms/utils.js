@@ -246,8 +246,13 @@ export function useFormUtils(props, state) {
       return result
     }
 
+    // sendOnlyShownBones: a form restricted with `bones` must not write the load-time
+    // values of hidden bones back over newer changes
+    const onlyShown = props.sendOnlyShownBones && props.bones?.length > 0
     for (const [fieldname, bone] of Object.entries(state.structure)) {
-      if (props.sendReadOnly) {
+      if (onlyShown && !props.bones.includes(fieldname) && bone.type !== "key") {
+        continue
+      } else if (props.sendReadOnly) {
         formdata.push(boneToForm(fieldname, bone, state.skel[fieldname]))
       } else if (!state.structure[fieldname]["readonly"] || bone.type === "key") {
         formdata.push(boneToForm(fieldname, bone, state.skel[fieldname]))

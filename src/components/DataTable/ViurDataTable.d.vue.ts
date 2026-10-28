@@ -40,8 +40,10 @@ export interface ViurDataTableProps {
 }
 
 export interface ViurDataTableEmitProps<R extends Row = Row> {
-  /** Double-click on a row. */
+  /** Double click or Enter on a data row. */
   onOpen?: (payload: { row: R; key: RowKey }) => void
+  /** Click or Enter on a data cell (passed through from the DataTable). */
+  onCellClick?: (payload: { column: string; value: unknown; row: R; index: number }) => void
   /** v-model:selectedKeys */
   "onUpdate:selectedKeys"?: (value: RowKey[]) => void
 }

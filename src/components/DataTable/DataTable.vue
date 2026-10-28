@@ -925,6 +925,8 @@ const emit = defineEmits<{
   "cell-click": [payload: { column: string; value: unknown; row: R; index: number }]
   /** Double click on a data row — typically to open the record. */
   "row-dblclick": [payload: { key: RowKey; row: R; index: number; originalEvent: MouseEvent }]
+  /** Double click or Enter on a data row — "open the record" for mouse and keyboard alike. */
+  "row-activate": [payload: { key: RowKey; row: R; index: number }]
   "cell-contextmenu": [payload: { column: string; value: unknown; row: R; index: number; originalEvent: MouseEvent }]
   "sort-change": [sort: SortEntry[]]
   "filter-change": [payload: { search: string; filters: FilterEntry[] }]
@@ -1417,6 +1419,7 @@ const nav = useGridNavigation(scrollerEl, {
         row: displayRow.row!,
         index: displayRow.index,
       })
+      emit("row-activate", { key: displayRow.nodeKey, row: displayRow.row!, index: displayRow.index })
     }
   },
   onToggleSelect: (rowIndex) => {
@@ -1843,6 +1846,7 @@ function onRowDoubleClick(displayRow: DisplayRow<R>, event: MouseEvent): void {
     index: displayRow.index,
     originalEvent: event,
   })
+  emit("row-activate", { key: displayRow.nodeKey, row: displayRow.row, index: displayRow.index })
 }
 
 function onCellClick(displayRow: DisplayRow<R>, cell: CellColumn, event: MouseEvent): void {

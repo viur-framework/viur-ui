@@ -34,7 +34,8 @@
       @data-request="onRequest"
       @load-more="onLoadMore"
       @page-change="onPageSizeChange"
-      @row-dblclick="$emit('open', { row: $event.row, key: $event.key })"
+      @row-activate="$emit('open', { row: $event.row, key: $event.key })"
+      @cell-click="$emit('cell-click', $event)"
     >
       <template
         v-for="(_, slotName) in $slots"
@@ -112,7 +113,7 @@ const props = defineProps({
   tableProps: { type: Object, default: () => ({}) },
 })
 
-defineEmits(["open"])
+defineEmits(["open", "cell-click"])
 
 const { t } = useI18n()
 const tableEl = ref(null)

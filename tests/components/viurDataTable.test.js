@@ -8,7 +8,7 @@ const table = vi.hoisted(() => ({ props: null, emit: null }))
 vi.mock("../../src/components/DataTable/DataTable.vue", () => ({
   default: defineComponent({
     props: ["columns", "maxMultiSort", "server"],
-    emits: ["data-request"],
+    emits: ["data-request", "row-activate", "cell-click"],
     setup(props, { emit }) {
       table.props = props
       table.emit = emit
@@ -85,5 +85,20 @@ describe("ViurDataTable", () => {
   it("keeps the own hidden flag of custom columns until the user chooses", () => {
     mount({ columns: [{ field: "secret", label: "Secret", hidden: true }] })
     expect(table.props.columns[0].hidden).toBe(true)
+  })
+
+  it("opens a row on row-activate (double click or Enter)", () => {
+    const onOpen = vi.fn()
+    mount({ onOpen })
+    table.emit("row-activate", { key: "k1", row: { key: "k1" }, index: 0 })
+    expect(onOpen).toHaveBeenCalledWith({ key: "k1", row: { key: "k1" } })
+  })
+
+  it("passes cell-click through", () => {
+    const onCellClick = vi.fn()
+    mount({ onCellClick })
+    const payload = { column: "name", value: "A", row: { key: "k1" }, index: 0 }
+    table.emit("cell-click", payload)
+    expect(onCellClick).toHaveBeenCalledWith(payload)
   })
 })

@@ -17,7 +17,7 @@
   >
     <!-- ── Toolbar: search + columns menu ───────────────────────────── -->
     <div
-      v-if="state.showToolbar"
+      v-if="state.showToolbar || $slots['toolbar-start'] || $slots['toolbar-end']"
       class="vi-dt-toolbar wa-split wa-gap-s wa-flex-nowrap"
     >
       <div class="wa-cluster wa-gap-xs wa-flex-nowrap">

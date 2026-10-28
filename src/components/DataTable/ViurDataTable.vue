@@ -139,9 +139,15 @@ const list = useListFetch(props.module, {
 
 const rows = computed(() => list.data.value)
 
-/** Everything loaded and small enough → local mode (the table's client pipeline). */
+/** Everything loaded and small enough → local mode (the table's client pipeline).
+ *  Not for a search: its hits are not the whole list. */
 const allLoaded = computed(
-  () => rows.value.length > 0 && rows.value.length <= props.localModeLimit && list.complete.value && !serverSearch.value
+  () =>
+    rows.value.length > 0 &&
+    rows.value.length <= props.localModeLimit &&
+    list.complete.value &&
+    !serverSearch.value &&
+    !props.params?.search
 )
 
 const effectiveColumns = computed(() => {

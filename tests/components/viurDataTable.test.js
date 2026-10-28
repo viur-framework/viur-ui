@@ -17,14 +17,14 @@ vi.mock("../../src/components/DataTable/DataTable.vue", () => ({
   }),
 }))
 
-const list = vi.hoisted(() => ({ filter: null }))
+const list = vi.hoisted(() => ({ filter: null, complete: false }))
 vi.mock("../../src/request/index.js", () => ({
   useListFetch: () => {
     list.filter = vi.fn(async () => {})
     return {
       data: ref([{ key: "k1", name: "A" }]),
       structure: ref({ name: { type: "str", descr: "Name", indexed: true } }),
-      complete: ref(false),
+      complete: ref(list.complete),
       cursor: ref("c1"),
       isFetching: ref(false),
       filter: list.filter,
@@ -45,7 +45,10 @@ function mount(props = {}) {
 
 const request = (overrides) => ({ sort: [], filters: [], search: "", page: 0, pageSize: 50, ...overrides })
 
-beforeEach(() => localStorage.clear())
+beforeEach(() => {
+  localStorage.clear()
+  list.complete = false
+})
 
 describe("ViurDataTable", () => {
   it("searches on the server with the table's own search box", () => {
@@ -65,6 +68,19 @@ describe("ViurDataTable", () => {
   it("allows one sorting in server mode, as ViUR orders by one bone", () => {
     mount()
     expect(table.props.maxMultiSort).toBe(1)
+  })
+
+  it("stays in server mode for a search given in params", () => {
+    // a full text search answers without a cursor; the rows are still only the hits
+    list.complete = true
+    mount({ params: { search: "ada" } })
+    expect(table.props.server).toBe(true)
+  })
+
+  it("switches to local mode once everything is loaded without a search", () => {
+    list.complete = true
+    mount()
+    expect(table.props.server).toBe(false)
   })
 
   it("hides custom columns the user switched off", async () => {

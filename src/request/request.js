@@ -714,7 +714,7 @@ export async function uploadFile(
         body: fd1,
       }
     )
-    if (!getUrlResp.ok) throw new Error(`getUploadURL failed: ${getUrlResp.status}`)
+    if (!getUrlResp.ok) throw await uploadError("getUploadURL", getUrlResp)
     // Envelope-agnostic: v2 carries the payload in `data`, v1 in `values`.
     const getUrlData = normalizeEnvelope(await getUrlResp.json())
     const { uploadUrl, uploadKey } = getUrlData.data ?? getUrlData.values ?? {}
@@ -730,13 +730,22 @@ export async function uploadFile(
       ...fetchOpts,
       body: fd3,
     })
-    if (!addResp.ok) throw new Error(`file/add failed: ${addResp.status}`)
+    if (!addResp.ok) throw await uploadError("file/add", addResp)
     const addData = normalizeEnvelope(await addResp.json())
     if (addData.status !== "success") throw new Error(`Upload failed: ${JSON.stringify(addData)}`)
     return addData.data ?? addData.values
   } catch (error) {
     throw error
   }
+}
+
+/** HTTPError for a failed upload step that keeps the server's reason: viur-core
+ *  answers with a JSON body carrying `descr` (and the x-viur-error header). */
+async function uploadError(step, response) {
+  const body = await response.json().catch(() => null)
+  const descr = body?.["descr"] || response.headers?.get?.("x-viur-error") || ""
+  const message = `${step} failed: ${response.status}${descr ? ` - ${descr}` : ""}`
+  return new HTTPError(response.status, response.statusText, message, response)
 }
 
 function _absolute(url) {

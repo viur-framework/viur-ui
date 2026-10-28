@@ -1181,6 +1181,38 @@ describe("uploadFile", () => {
     const file = new File(["x"], "x.txt")
     await expect(uploadFile(file)).rejects.toThrow("getUploadURL failed")
   })
+
+  it("keeps status and reason of the server when getUploadURL is refused", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/skey")) return jsonResponse(["sk1", "sk2"])
+        return jsonResponse({ status: 413, reason: "Request Entity Too Large", descr: "File too large" }, 413)
+      })
+    )
+
+    const error = await uploadFile(new File(["x"], "x.txt")).catch((e) => e)
+    expect(error).toBeInstanceOf(HTTPError)
+    expect(error.statusCode).toBe(413)
+    expect(error.message).toBe("getUploadURL failed: 413 - File too large")
+  })
+
+  it("keeps the reason of the server when file/add is refused", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url) => {
+        if (url.includes("/skey")) return jsonResponse(["sk1", "sk2"])
+        if (url.includes("/getUploadURL"))
+          return jsonResponse({ values: { uploadUrl: "https://storage.example.com/upload", uploadKey: "k" } })
+        if (url.includes("/file/add")) return jsonResponse({ status: 403, descr: "No access" }, 403)
+        return { ok: true, status: 200, json: () => Promise.resolve(null) }
+      })
+    )
+
+    const error = await uploadFile(new File(["x"], "x.txt")).catch((e) => e)
+    expect(error.statusCode).toBe(403)
+    expect(error.message).toBe("file/add failed: 403 - No access")
+  })
 })
 
 describe("useTreeFetch — parententry bleibt über filter()/next() erhalten", () => {

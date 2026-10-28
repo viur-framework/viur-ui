@@ -349,11 +349,12 @@ function selectOptions(body) {
   }))
 }
 
-/** Show a step's form. It submits to its `params.action_url` (second factor)
- *  or back to the url it was rendered from. */
+/** Show a step's form. It submits to its target - `follow` in envelope v2,
+ *  `params.action_url` in v1 (normalizeEnvelope lifts it into `follow`) - or
+ *  back to the url it was rendered from. */
 function showStep(body, url, view) {
   state.step = { structure: body?.["structure"] ?? {}, skel: body?.["data"] ?? {} }
-  state.url = body?.["params"]?.["action_url"] || url
+  state.url = body?.["follow"] || body?.["params"]?.["action_url"] || url
   state.view = view
   state.stepKey++
 }
@@ -454,9 +455,10 @@ async function submitClassic() {
 
 async function onClassicAnswer(body) {
   const action = body?.["action"]
-  if (action === "login_success") return finishClassic()
   // new password is set — continue with the login
   if (action === "pwrecover_success") return showStart()
+  // v1 says login_success, envelope v2 says status success
+  if (action === "login_success" || body?.["status"] === "success") return finishClassic()
   if (action === "select_secondfactor_provider") {
     state.secondFactors = selectOptions(body)
     state.view = "secondfactor"
@@ -464,9 +466,10 @@ async function onClassicAnswer(body) {
     // the form shows the field errors
     state.error = CLASSIC_VIEWS[state.view]?.error ?? null
   } else if (body?.["structure"]) {
-    // the next form came along: the second factor (only it carries an
-    // action_url) or the next recovery step
-    showStep(body, state.url, body?.["params"]?.["action_url"] ? "otp" : state.view)
+    // the next form came along: the second factor (its target is an f2_
+    // provider) or the next recovery step
+    const secondFactor = body?.["params"]?.["action_url"] || /\/f2_[^/]+\//.test(body?.["follow"] ?? "")
+    showStep(body, state.url, secondFactor ? "otp" : state.view)
   }
 }
 

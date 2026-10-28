@@ -197,6 +197,23 @@ describe("request layer integration", () => {
     ])
   })
 
+  it("HTTP error carries the reason the server gives", async () => {
+    vi.stubGlobal("fetch", withSkey({ status: 403, reason: "Forbidden", descr: "No access to this ticket" }, 403))
+    const result = useEditFetch("ticket", "/", { key: "k1" })
+    await waitUntilFinished(result)
+
+    expect(result.error.value.statusCode).toBe(403)
+    expect(result.error.value.message).toBe("No access to this ticket")
+    expect(useMessageStore().latest).toMatchObject({ type: "error", status: 403, text: "No access to this ticket" })
+  })
+
+  it("HTTP error of a list carries the reason the server gives", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ status: 400, descr: "Invalid filter" }, 400)))
+    const list = useListFetch("ticket")
+    await waitUntilFinished(list)
+    expect(useMessageStore().latest).toMatchObject({ type: "error", status: 400, text: "Invalid filter" })
+  })
+
   it("GET success pushes nothing", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ action: "view", values: { key: "k1" } })))
     const result = useViewFetch("user", "/", { key: "k1" })

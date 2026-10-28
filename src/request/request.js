@@ -26,6 +26,12 @@ function toSearchParams(params) {
   return qs
 }
 
+/** Message of a failed request: viur-core sends its reason as `descr` in the
+ *  JSON body (and the x-viur-error header); without one, the fetch error. */
+function serverReason(ctx) {
+  return ctx.data?.["descr"] || ctx.response?.headers?.get?.("x-viur-error") || ctx.error?.message
+}
+
 export class HTTPError extends Error {
   constructor(statusCode, statusText, message, response = null) {
     super(message || statusText)
@@ -263,7 +269,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           if (ctx.context.generation !== _generation || ctx.error?.name === "AbortError") {
             return { ...ctx, error: error.value }
           }
-          ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
+          ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, serverReason(ctx), ctx.response)
           if (messages) {
             notify(
               requestMessage({ method: "GET", endpoint: "list", module: controllerPath(controller), error: ctx.error })
@@ -609,7 +615,7 @@ export function createControllerFetch({
           return { url: postUrl, options }
         },
         onFetchError(ctx) {
-          ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, ctx.error?.message, ctx.response)
+          ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, serverReason(ctx), ctx.response)
           if (messages) {
             notify(requestMessage({ method, endpoint, module: controllerPath(controller), error: ctx.error }))
           }

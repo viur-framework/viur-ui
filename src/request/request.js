@@ -84,12 +84,18 @@ function create_url({ controller, endpoint, renderer = "json", version = null, l
 const SKEY_BATCH_SIZE = 10
 let _skeyCache = []
 let _skeyPending = null
+// viur-core hands out a batch only to a logged-in session and answers 403
+// otherwise; after that, ask for single keys until the next resetState (login)
+let _skeyBatch = true
 
 async function _refillSkeys(renderer) {
   const base = import.meta.env.VITE_API_URL ?? window.location.origin
   try {
-    let response = await fetch(`${base}/${renderer}/skey?amount=${SKEY_BATCH_SIZE}`, { credentials: "include" })
-    if (!response.ok) {
+    let response = _skeyBatch
+      ? await fetch(`${base}/${renderer}/skey?amount=${SKEY_BATCH_SIZE}`, { credentials: "include" })
+      : null
+    if (!response?.ok) {
+      if (response?.status === 403) _skeyBatch = false
       response = await fetch(`${base}/${renderer}/skey`, { credentials: "include" })
       if (!response.ok) throw new Error("Failed to fetch skey token")
     }
@@ -815,6 +821,7 @@ export function serveUrlFor(servingurl, size = null, filename = null, options = 
 export function resetState() {
   _skeyCache = []
   _skeyPending = null
+  _skeyBatch = true
   return clearCache()
 }
 

@@ -110,6 +110,25 @@ describe("skey token fetching", () => {
     expect(fallbackCall).toBeDefined()
   })
 
+  it("asks for single skeys after a 403 on the batch until resetState", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url) => {
+      if (url.includes("/skey?amount=")) return jsonResponse(null, 403)
+      if (url.includes("/skey")) return jsonResponse("single-sk")
+      return jsonResponse({ action: "editSuccess", values: {} })
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    const batchCalls = () => fetchMock.mock.calls.filter(([url]) => url.includes("/skey?amount=")).length
+
+    await useEditFetch("mod", "/", {}, { immediate: false }).execute()
+    await useEditFetch("mod", "/", {}, { immediate: false }).execute()
+    expect(batchCalls()).toBe(1)
+
+    // a login resets the state: the session may now get a batch
+    await resetState()
+    await useEditFetch("mod", "/", {}, { immediate: false }).execute()
+    expect(batchCalls()).toBe(2)
+  })
+
   it("fetches skeys again after a failed refill", async () => {
     let skeyAvailable = false
     vi.stubGlobal(

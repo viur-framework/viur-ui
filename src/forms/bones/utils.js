@@ -181,7 +181,8 @@ export default class Utils {
       case "raw":
         return typeof value === "object" ? JSON.stringify(value) : String(value)
       default:
-        return typeof value === "object" ? JSON.stringify(value) : String(value)
+        // viur-core stores strings HTML-escaped ("&#40;" for "("); the cell shows text
+        return typeof value === "object" ? JSON.stringify(value) : Utils.unescape(String(value))
     }
   }
 

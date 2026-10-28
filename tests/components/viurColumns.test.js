@@ -74,6 +74,12 @@ describe("boneText", () => {
     expect(boneText("<p>Hallo <b>Welt</b></p>", bone)).toBe("Hallo Welt")
   })
 
+  it("shows strings escaped by viur-core as typed", () => {
+    expect(boneText("Muster &#40;FFZ&#41; &lt;b&gt;", str)).toBe("Muster (FFZ) <b>")
+    expect(boneText(0, {})).toBe("0")
+    expect(boneText(false, {})).toBe("false")
+  })
+
   it("multiple wird zusammengefügt", () => {
     expect(boneText(["a", "b"], multi)).toBe("a, b")
     expect(boneText(null, multi)).toBe("")

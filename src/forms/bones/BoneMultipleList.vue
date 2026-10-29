@@ -35,11 +35,13 @@
     class="bone-multiple-placeholder"
     :class="{ 'is-readonly': readonly }"
   >
-    <wa-input
-      readonly
-      size="medium"
-      :placeholder="$t('bone.no_entries')"
-    />
+    <slot name="empty">
+      <wa-input
+        readonly
+        size="medium"
+        :placeholder="$t('bone.no_entries')"
+      />
+    </slot>
   </div>
   <component
     :is="actionbar"

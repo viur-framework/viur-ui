@@ -99,7 +99,19 @@
                 :bonestructure="state.bonestructure"
                 :readonly="state.readonly"
                 :actionbar="state.actionbar"
-              />
+              >
+                <template
+                  v-if="state.emptyState"
+                  #empty
+                >
+                  <component
+                    :is="state.emptyState"
+                    :name="name"
+                    :lang="lang"
+                    :bone="state.bonestructure"
+                  />
+                </template>
+              </bone-multiple-list>
               <!-- Value actions (delete, download …) per language on the entry -->
               <bone-single-entry
                 :is="is"
@@ -139,7 +151,18 @@
           :bonestructure="state.bonestructure"
           :readonly="state.readonly"
           :actionbar="state.actionbar"
-        />
+        >
+          <template
+            v-if="state.emptyState"
+            #empty
+          >
+            <component
+              :is="state.emptyState"
+              :name="name"
+              :bone="state.bonestructure"
+            />
+          </template>
+        </bone-multiple-list>
         <bone-single-entry
           :is="is"
           v-else
@@ -187,7 +210,7 @@
 /** @displayName Bone */
 import { reactive, computed, onBeforeMount, provide, watch, watchEffect, inject, unref } from "vue"
 import BoneLabel from "./BoneLabel.vue"
-import { BoneHasMultipleHandling, getBoneActionbar } from "./index.js"
+import { BoneHasMultipleHandling, getBoneActionbar, getBoneEmptyState } from "./index.js"
 import rawBone from "./widgets/rawBone.vue"
 import Utils, { buildBoneDomId } from "./utils.js"
 import BoneActions from "./BoneActions.vue"
@@ -379,6 +402,10 @@ const state = reactive({
   // The actionbar component matching the bone type (e.g. for file, relational)
   actionbar: computed(() => {
     return getBoneActionbar(state.bonestructure?.["type"])
+  }),
+  // Registered empty state for multiple bones, replaces the "no entries" input
+  emptyState: computed(() => {
+    return getBoneEmptyState(state.bonestructure?.["type"])
   }),
   // Whether the bone value is empty (null, empty array, empty object). Always false in readonly mode
   isEmpty: computed(() => {

@@ -16,7 +16,7 @@
   "dependencies": {
     "@vue/compiler-dom": "^3.3.0",
     "destr": "^2.0.5",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "json-editor-vue": "^0.18.1",
     "libphonenumber-js": "^1.12.41",
     "logics-js": "^0.4.1",

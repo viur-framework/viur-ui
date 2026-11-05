@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { defineComponent, nextTick, watchEffect } from "vue"
 import { createPinia, setActivePinia } from "pinia"
-import { addBoneWidget, getBoneWidget, addBoneActionbar, getBoneActionbar } from "../../../src/forms/bones/index.js"
+import {
+  addBoneWidget,
+  getBoneWidget,
+  addBoneActionbar,
+  getBoneActionbar,
+  addBoneEmptyState,
+  getBoneEmptyState,
+} from "../../../src/forms/bones/index.js"
 
 const widget = (name) => defineComponent({ name, render: () => null })
 
@@ -51,5 +58,15 @@ describe("bone registry", () => {
     await nextTick()
 
     expect(resolved).toBe(custom)
+  })
+
+  it("resolves an empty state by prefix and has none by default", () => {
+    const empty = widget("imageEmpty")
+    expect(getBoneEmptyState("relational.tree.leaf.file.image.file")).toBeUndefined()
+
+    addBoneEmptyState("relational.tree.leaf.file.image.", empty)
+
+    expect(getBoneEmptyState("relational.tree.leaf.file.image.file")).toBe(empty)
+    expect(getBoneEmptyState("relational.tree.leaf.file.file")).toBeUndefined()
   })
 })

@@ -6,6 +6,8 @@ covers:
     src.forms.bones.getBoneWidget,
     src.forms.bones.addBoneActionbar,
     src.forms.bones.getBoneActionbar,
+    src.forms.bones.addBoneEmptyState,
+    src.forms.bones.getBoneEmptyState,
     src.forms.bones.BoneHasMultipleHandling,
   ]
 status: accepted
@@ -23,6 +25,12 @@ Own button bar below a multiple bone: `addBoneActionbar(type, component)`,
 same key rules. Per-value and per-bone buttons (delete, translate, ...) are not
 the actionbar but `addAction` / `setDefaultActionsForType` in
 `src/forms/bones/actions/index.js`.
+
+Own empty state for a multiple bone: `addBoneEmptyState(type, component)`,
+same key rules. `Bone.vue` puts it into the `empty` slot of
+`BoneMultipleList`, which otherwise shows a readonly "no entries" input. The
+component gets `name, lang, bone`; the actionbar is still rendered below it.
+Without a registration nothing changes.
 
 Widget contract, provided by `BoneSingleEntry` / `BoneMultipleList`: props
 `name, value, index, lang, bone, autofocus`; emit
@@ -51,6 +59,9 @@ this store but registered globally by `installViurForms` in
 - A widget that renders the multiple list itself must be added to
   `state.multibones`; otherwise `Bone.vue` wraps it in `BoneMultipleList` and
   it gets one array entry per instance.
+- To change only what an empty multiple bone shows, register an empty state
+  instead of moving the widget to `multibones`; the list, drag and drop and
+  per-entry actions stay with `BoneMultipleList`.
 
 ## Traps
 

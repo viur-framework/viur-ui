@@ -15,7 +15,7 @@ language (`languages`), object of arrays (both). Props `languages`,
 `multiple`, `readonly`, `required`, `params`, `value` override the
 structure.
 
-Provided to widget, actionbar and actions:
+Provided to widget, actionbar, empty state and actions:
 
 - `boneState` - `bonestructure`, `bonevalue`, `readonly`, `required`,
   `multiple`, `languages`, `currentLanguage`, `params`, `boneactions`,
@@ -57,6 +57,9 @@ data)`, `removeMultipleEntry(index, lang)`, `removeMultipleEntries(lang)`,
   the init `change` of the widget that renders it.
 - If `defaultLanguage` is not among the bone's languages, the first one is
   active.
+- The empty state from `getBoneEmptyState(type)` fills the `empty` slot of
+  `BoneMultipleList`. It only shows for multiple bones that are not in
+  `multibones`, and also in readonly mode, where the actionbar is hidden.
 
 ## See also
 

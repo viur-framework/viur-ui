@@ -80,6 +80,7 @@ export const useBoneStore = defineStore("boneStore", () => {
       "relational.": relationalBar,
     }),
     multibones: shallowRef(["select", "select."]),
+    emptyStates: shallowRef({}),
   })
 
   // Replace instead of mutating: the registries are shallowRefs, only a new object triggers.
@@ -148,6 +149,15 @@ export const useBoneStore = defineStore("boneStore", () => {
     return lookup(state.actionbars, boneType) ?? defaultBar
   }
 
+  // Shown by BoneMultipleList instead of the "no entries" input while a multiple bone is empty
+  function addBoneEmptyState(boneType, widget) {
+    state.emptyStates = { ...state.emptyStates, [boneType]: widget }
+  }
+
+  function getBoneEmptyState(boneType) {
+    return lookup(state.emptyStates, boneType)
+  }
+
   return {
     state,
     addBoneWidget,
@@ -155,6 +165,9 @@ export const useBoneStore = defineStore("boneStore", () => {
 
     addBoneActionbar,
     getBoneActionbar,
+
+    addBoneEmptyState,
+    getBoneEmptyState,
   }
 })
 
@@ -166,6 +179,16 @@ export function addBoneActionbar(boneType, widget) {
 export function getBoneActionbar(boneType) {
   const boneStore = useBoneStore()
   return boneStore.getBoneActionbar(boneType)
+}
+
+export function addBoneEmptyState(boneType, widget) {
+  const boneStore = useBoneStore()
+  return boneStore.addBoneEmptyState(boneType, widget)
+}
+
+export function getBoneEmptyState(boneType) {
+  const boneStore = useBoneStore()
+  return boneStore.getBoneEmptyState(boneType)
 }
 
 export function getBoneWidget(boneType) {

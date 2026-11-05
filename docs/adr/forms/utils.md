@@ -45,6 +45,13 @@ defaults are overridden with the `values` prop. Rendering of single bones is
   That is how ViUR clears a bone; do not filter them out.
 - An invalid form rejects with the string `"Form is not valid"`, not an
   `Error`, and sends nothing.
+- Client validity (`state.isValid`) comes from the `valid` of each `change`.
+  `updateSkel` keeps it per entry (`lang`, `index`), and `state.valids[name]`
+  is false while any entry of the bone is invalid. An update without `index`
+  (whole language list, e.g. after removing or reordering) or without `lang`
+  and `index` (whole bone) replaces the entries below it; the widgets report
+  again as they remount or change. A widget that reports a wrong `index` or
+  `lang` therefore keeps or drops the wrong entry.
 - `evaluate` writes `result.toString()` into the skel, so a computed numeric
   bone holds a string.
 - `visibleIf` and `requiredIf` swallow expression errors, `readonlyIf` and

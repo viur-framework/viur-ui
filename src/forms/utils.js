@@ -468,9 +468,28 @@ export function useFormUtils(props, state) {
     return sortedCategories
   }
 
+  // Validity per entry of a bone: a multiple or multilingual bone reports each entry on its own
+  // (lang, index), so one entry must not overwrite another. `state.valids[name]` stays the bone's
+  // verdict (all entries valid). An update for a wider scope (whole language, whole bone) replaces
+  // the narrower states: after removing or reordering, the entries no longer sit where they were
+  // reported, and the widgets report again as they remount or change.
+  const entryValids = {}
+
+  function recordValidity(name, lang, index, valid) {
+    const scope = `${lang ?? ""}|`
+    const entries = (entryValids[name] ??= {})
+    if (index === null || index === undefined) {
+      for (const key of Object.keys(entries)) {
+        if (lang === null || lang === undefined || key.startsWith(scope)) delete entries[key]
+      }
+    }
+    entries[scope + (index ?? "")] = valid !== false
+    state.valids[name] = Object.values(entries).every(Boolean)
+  }
+
   function updateSkel(data) {
     const { name, lang, value, index, valid } = data
-    state.valids[name] = valid
+    recordValidity(name, lang, index, valid)
 
     let skelvalue = state.skel[name]
     if (value === undefined) return false

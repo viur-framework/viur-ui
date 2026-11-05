@@ -5,7 +5,8 @@ status: accepted
 
 ## Seam
 
-Routes from `numeric` and `numeric.*`. Driven by the server bone:
+Routes from `numeric` and `numeric.*` (except `numeric.duration`, see
+`numericBoneDuration.md`). Driven by the server bone:
 `minAmount` / `maxAmount` -> `min` / `max`, `precision` -> `step`
 (`precision: 2` -> `0.01`; no precision -> no step, i.e. integers only in
 the native check). Native validity goes out as `valid`.

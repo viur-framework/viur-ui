@@ -10,6 +10,7 @@ import recordBone from "./widgets/recordBone.vue"
 import addressBone from "./widgets/addressBone.vue"
 import colorBone from "./widgets/colorBone.vue"
 import numericBone from "./widgets/numericBone.vue"
+import numericBoneDuration from "./widgets/numericBoneDuration.vue"
 import relationalBone from "./widgets/relationalBone.vue"
 import fileBone from "./widgets/fileBone.vue"
 import spatialBone from "./widgets/spatialBone.vue"
@@ -62,6 +63,7 @@ export const useBoneStore = defineStore("boneStore", () => {
       recordBone,
       addressBone,
       numericBone,
+      numericBoneDuration,
       colorBone,
       relationalBone,
       jsonBone,
@@ -118,6 +120,8 @@ export const useBoneStore = defineStore("boneStore", () => {
       return addressBone
     } else if (boneType === "record" || boneType.startsWith("record.")) {
       return recordBone
+    } else if (boneType === "numeric.duration") {
+      return numericBoneDuration
     } else if (boneType === "numeric" || boneType.startsWith("numeric.")) {
       return numericBone
     } else if (boneType === "relational.tree.leaf.file.file" || boneType.startsWith("relational.tree.leaf.file.")) {

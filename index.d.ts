@@ -365,3 +365,15 @@ export declare function sanitizeHtml(value: unknown): string
 export declare const safeHtml: import("vue").Plugin
 /** The `v-safe-html` directive for local registration (`import { vSafeHtml }` in `<script setup>`). */
 export declare const vSafeHtml: import("vue").ObjectDirective<HTMLElement, unknown>
+
+/** Map component and geocoder for the address widget (`record.address`). viur-ui ships none. */
+export interface AddressProvider {
+  /** Props `coordinates` (`[lat, lng] | null`) and `readonly`; emits `pick` with `[lat, lng]`. Handles its own consent. */
+  map?: import("vue").Component
+  /** Address fields -> `[lat, lng]`, `null` if not found. */
+  geocode?: (address: Record<string, unknown>) => Promise<[number, number] | null>
+  /** `[lat, lng]` -> address fields (`street_name`, `street_number`, `zip_code`, `city`, `region`, `country`). */
+  reverseGeocode?: (coordinates: [number, number]) => Promise<Record<string, unknown> | null>
+}
+/** Registers the map/geocoder for all address widgets. Call once at app start, `null` removes it. */
+export declare function setAddressProvider(provider: AddressProvider | null): void

@@ -3,9 +3,9 @@ pre-commit:
   jobs:
     - name: eslint
       glob: "*.{js,vue}"
-      run: npx eslint --fix {staged_files}
+      run: pnpm exec eslint --fix {staged_files}
       stage_fixed: true
     - name: prettier
       glob: "*.{js,vue,json,md,yml,yaml}"
-      run: npx prettier --write {staged_files}
+      run: pnpm exec prettier --write {staged_files}
       stage_fixed: true

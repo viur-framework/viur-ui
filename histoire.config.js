@@ -132,6 +132,11 @@ export default defineConfig({
           find: "@codemirror/language-data",
           replacement: path.resolve(__dirname, "example/node_modules/@codemirror/language-data"),
         },
+        // codeBone imports these directly; pnpm does not hoist codemirror's own deps
+        ...["commands", "language", "state", "view"].map((name) => ({
+          find: new RegExp(`^@codemirror/${name}$`),
+          replacement: path.resolve(__dirname, `example/node_modules/@codemirror/${name}`),
+        })),
         { find: "@viur/webawesome", replacement: path.resolve(__dirname, "example/node_modules/@viur/webawesome") },
         { find: "logics-js", replacement: path.resolve(__dirname, "example/node_modules/logics-js") },
       ],

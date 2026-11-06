@@ -1,0 +1,8 @@
+packages:
+  - example
+
+allowBuilds:
+  esbuild: true
+  json-editor-vue: false
+  lefthook: true
+  vue-demi: true

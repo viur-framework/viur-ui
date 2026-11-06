@@ -90,16 +90,16 @@ Full list: [`index.js`](./index.js), types: [`index.d.ts`](./index.d.ts).
 ## Development
 
 ```bash
-npm install && npm install --prefix example
-npm run story:dev   # Histoire, :6006
-npm run test:run    # Vitest
-npm run lint
+pnpm install        # root + example/ (workspace)
+pnpm story:dev      # Histoire, :6006
+pnpm test:run       # Vitest
+pnpm lint
 ```
 
 ## Release
 
 ```bash
-npm version patch && git push --follow-tags
+pnpm version patch && git push --follow-tags
 ```
 
 Published by [`release.yml`](./.github/workflows/release.yml) via npm Trusted Publishing. `-alpha` / `-beta` / `-rc` → matching dist-tag, else `latest`.

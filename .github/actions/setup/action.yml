@@ -1,22 +1,18 @@
 name: "Setup viur-ui"
-description: "Node 24 + npm ci in root and example/"
+description: "Node (.nvmrc) + pnpm install for the workspace (root and example/)"
 
 runs:
   using: "composite"
   steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
     - name: Setup Node
       uses: actions/setup-node@v6
       with:
         node-version-file: ".nvmrc"
-        cache: "npm"
-        cache-dependency-path: |
-          package-lock.json
-          example/package-lock.json
+        cache: "pnpm"
 
-    - name: Install root dependencies
+    - name: Install dependencies (root + example/ for histoire aliases)
       shell: bash
-      run: npm ci
-
-    - name: Install example dependencies (required for histoire aliases)
-      shell: bash
-      run: npm ci --prefix example
+      run: pnpm install --frozen-lockfile

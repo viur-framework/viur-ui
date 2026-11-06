@@ -6,6 +6,7 @@
     "url": "https://github.com/viur-framework/viur-ui"
   },
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
   "main": "./index.js",
   "types": "./index.d.ts",
   "files": [
@@ -25,7 +26,11 @@
   },
   "peerDependencies": {
     "@ckeditor/ckeditor5-vue": "^7.3.0",
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/language": "^6.0.0",
     "@codemirror/language-data": "^6.5.2",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
     "@viur/webawesome": ">=0.10.0",
     "@vueuse/core": "^12.4.0",
     "ckeditor5": "^45.2.0",
@@ -36,7 +41,7 @@
     "vue-router": "^4.5.0"
   },
   "scripts": {
-    "icons": "npx wa-icons . ./stories/public/webawesome/assets/icons",
+    "icons": "wa-icons . ./stories/public/webawesome/assets/icons",
     "test": "vitest",
     "test:run": "vitest run",
     "story:dev": "histoire dev",
@@ -71,7 +76,19 @@
     "@ckeditor/ckeditor5-vue": {
       "optional": true
     },
+    "@codemirror/commands": {
+      "optional": true
+    },
+    "@codemirror/language": {
+      "optional": true
+    },
     "@codemirror/language-data": {
+      "optional": true
+    },
+    "@codemirror/state": {
+      "optional": true
+    },
+    "@codemirror/view": {
       "optional": true
     },
     "ckeditor5": {

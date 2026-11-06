@@ -20,16 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
+      - uses: ./.github/actions/setup
 
+      # Publishing stays on npm: Trusted Publishing (OIDC) needs a current npm CLI.
       - name: Ensure npm supports trusted publishing
         run: npm install -g npm@latest
-
-      - run: npm ci
 
       - name: Tag must match package.json
         run: |

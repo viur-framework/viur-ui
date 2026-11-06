@@ -17,12 +17,11 @@ git checkout develop
 # Node-Version (empfohlen: nvm)
 nvm use                           # liest .nvmrc → Node 24
 
-# Deps installieren (Root UND example/ sind beide Pflicht)
-npm install                       # triggert automatisch 'lefthook install'
-npm install --prefix example      # Peer-Deps für Histoire (CKEditor, codemirror, webawesome, ...)
+# Deps installieren (pnpm-Workspace: Root + example/ in einem Rutsch)
+pnpm install                      # installiert auch example/ (Peer-Deps für Histoire) und triggert 'lefthook install'
 ```
 
-Nach `npm install` sind die Git-Hooks automatisch aktiv (via `prepare` Script in `package.json`).
+Nach `pnpm install` sind die Git-Hooks automatisch aktiv (via `prepare` Script in `package.json`).
 
 ---
 
@@ -32,10 +31,10 @@ Nach `npm install` sind die Git-Hooks automatisch aktiv (via `prepare` Script in
 
 Auf jeden Commit laufen — **parallel, nur auf staged Files** — zwei Jobs:
 
-| Job | Glob | Command |
-|---|---|---|
-| `eslint` | `*.{js,vue}` | `npx eslint --fix {staged_files}` |
-| `prettier` | `*.{js,vue,json,md,yml,yaml}` | `npx prettier --write {staged_files}` |
+| Job        | Glob                          | Command                                     |
+| ---------- | ----------------------------- | ------------------------------------------- |
+| `eslint`   | `*.{js,vue}`                  | `pnpm exec eslint --fix {staged_files}`     |
+| `prettier` | `*.{js,vue,json,md,yml,yaml}` | `pnpm exec prettier --write {staged_files}` |
 
 Beide mit `stage_fixed: true` — gefixte Dateien werden automatisch neu gestaged und landen im Commit. Du merkst davon nichts, solange alles fixbar ist.
 
@@ -48,7 +47,7 @@ Wenn ESLint einen nicht-fixbaren Verstoß findet (z. B. `no-restricted-syntax`, 
 ```bash
 # Dry-Run: staged Files gegen den Hook laufen lassen (ohne wirklichen Commit)
 git add <file>
-npx lefthook run pre-commit
+pnpm exec lefthook run pre-commit
 ```
 
 ### Hook bewusst umgehen (Notfall)
@@ -66,21 +65,22 @@ git commit --no-verify -m "..."
 ### Linting & Formatting
 
 ```bash
-npm run lint           # ESLint über das ganze Repo (inkl. Prettier via Plugin)
-npm run format:check   # Nur Prettier-Check, keine Fixes
+pnpm lint              # ESLint über das ganze Repo (inkl. Prettier via Plugin)
+pnpm format:check      # Nur Prettier-Check, keine Fixes
 ```
 
 **Zum Fixen lokal:**
+
 ```bash
-npx eslint . --fix
-npx prettier --write .
+pnpm exec eslint . --fix
+pnpm exec prettier --write .
 ```
 
 ### Tests
 
 ```bash
-npm run test:run       # Vitest Unit-Tests (einmalig)
-npm run test           # Vitest Watch-Mode (Dev)
+pnpm test:run          # Vitest Unit-Tests (einmalig)
+pnpm test              # Vitest Watch-Mode (Dev)
 ```
 
 ### Bone-Coverage-Gate
@@ -101,11 +101,11 @@ Workflow: `.github/workflows/pr.yml`
 
 ### Drei parallele Jobs
 
-| Job | Dauer | Blockierend? | Zweck |
-|---|---|---|---|
-| `Lint` | ~20 s | `continue-on-error: true` ¹ | ESLint inkl. Prettier |
-| `Unit Tests` | ~30 s | `continue-on-error: true` ² | Vitest |
-| `Bone Coverage Gate` | ~2 s | **ja** | Strukturcheck: jeder Bone hat eine Story |
+| Job                  | Dauer | Blockierend?                | Zweck                                    |
+| -------------------- | ----- | --------------------------- | ---------------------------------------- |
+| `Lint`               | ~20 s | `continue-on-error: true` ¹ | ESLint inkl. Prettier                    |
+| `Unit Tests`         | ~30 s | `continue-on-error: true` ² | Vitest                                   |
+| `Bone Coverage Gate` | ~2 s  | **ja**                      | Strukturcheck: jeder Bone hat eine Story |
 
 ¹ Bis Backlog-Task #9 (241 bestehende Lint-Errors) durch ist.
 ² Bis Backlog-Task #10 (3 failing Request-Tests) durch ist.
@@ -124,6 +124,7 @@ stories/bones/BlobBone.story.vue          → Histoire-Story (PascalCase)
 ```
 
 **Namens-Konventionen sind fix:**
+
 - File `<name>Bone.vue` (camelCase)
 - Story `<Name>Bone.story.vue` (PascalCase)
 
@@ -153,12 +154,12 @@ Nicht-eigenständige Bones werden in `scripts/check-bone-coverage.js` in der `WH
 
 ### Histoire startet nicht
 
-Meistens fehlen die `example/`-Deps: `npm install --prefix example` (ohne die bricht Histoire beim Laden von `@viur/webawesome/...`).
+Meistens fehlen die `example/`-Deps: `pnpm install` (ohne die bricht Histoire beim Laden von `@viur/webawesome/...`).
 
 ### Lefthook läuft nicht beim Commit
 
 ```bash
-npx lefthook install    # reinstalliert den Git-Hook-Stub
+pnpm exec lefthook install    # reinstalliert den Git-Hook-Stub
 cat .git/hooks/pre-commit   # sollte lefthook erwähnen
 ```
 
@@ -178,10 +179,10 @@ Zu jedem `<name>Bone.vue` muss es eine `<Name>Bone.story.vue` geben.
 
 Zwei Punkte sind per Backlog-Task dokumentiert und lassen die CI derzeit nicht voll blockieren:
 
-| # | Beschreibung | Wieviele |
-|---|---|---|
-| 9 | ESLint-Errors (`no-restricted-syntax`, `vue/`) | 241 errors, 386 warnings |
-| 10 | Failing Vitest-Tests in `tests/request/request.test.js` | 3 Tests |
+| #   | Beschreibung                                            | Wieviele                 |
+| --- | ------------------------------------------------------- | ------------------------ |
+| 9   | ESLint-Errors (`no-restricted-syntax`, `vue/`)          | 241 errors, 386 warnings |
+| 10  | Failing Vitest-Tests in `tests/request/request.test.js` | 3 Tests                  |
 
 Sobald ein Punkt abgeschlossen ist: `continue-on-error: true` aus dem entsprechenden Job in `.github/workflows/pr.yml` entfernen. Dann blockt der Job hart.
 

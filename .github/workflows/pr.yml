@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
-      - run: npm run lint
+      - run: pnpm lint
 
   unit:
     name: Unit Tests
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
-      - run: npm run test:run
+      - run: pnpm test:run
 
   coverage-gate:
     name: Bone Coverage Gate

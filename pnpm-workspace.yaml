@@ -1,6 +1,11 @@
 packages:
   - example
 
+# histoire 1.0.0-beta.1 (latest) still declares vite ^7.3; builds fine on vite 8
+peerDependencyRules:
+  allowedVersions:
+    vite: "8"
+
 allowBuilds:
   esbuild: true
   json-editor-vue: false

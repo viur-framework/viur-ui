@@ -70,6 +70,7 @@
 
   <form
     v-else
+    v-bind="$attrs"
     :ref="(el) => (state.viformelement = el)"
     @submit.prevent.stop="() => {}"
   >
@@ -152,6 +153,12 @@ import { reactive, watch, onBeforeMount, onMounted, onBeforeUnmount, computed, p
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 import Bone from "./bones/Bone.vue"
+
+// The template has several root nodes (steps, list, form, actions), so Vue would
+// drop attributes like `class` passed to <vi-form>. Forward them to the <form>.
+defineOptions({
+  inheritAttrs: false,
+})
 
 const emit = defineEmits(["change", "keypress-enter", "failed", "success", "step-change"])
 

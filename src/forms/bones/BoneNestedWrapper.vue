@@ -46,6 +46,7 @@ import {
   ref,
   provide,
   unref,
+  toRaw,
 } from "vue"
 import { getBoneWidget } from "./index.js"
 import ViForm from "../ViForm.vue"
@@ -132,7 +133,11 @@ onMounted(() => {
 
   for (const [bonename, boneStructure] of Object.entries(props.bone["using"])) {
     if (!Object.keys(val).includes(bonename) && boneStructure["defaultvalue"]) {
-      val[bonename] = boneStructure["defaultvalue"]
+      // Copy, never share: a multilanguage or multiple defaultvalue is an object,
+      // and handing the same one to every new entry makes them all change together
+      // (and taints the structure's defaultvalue). toRaw first — structuredClone
+      // cannot clone a reactive proxy.
+      val[bonename] = structuredClone(toRaw(boneStructure["defaultvalue"]))
     }
   }
 

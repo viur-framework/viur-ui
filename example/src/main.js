@@ -6,10 +6,10 @@ import { createI18n } from "vue-i18n"
 import App from "./App.vue"
 
 import ViForm from "viur-ui/src/forms/ViForm.vue"
-import Bone from "viur-ui/src/forms/bones/bone.vue"
-import BoneLabel from "viur-ui/src/forms/bones/boneLabel.vue"
-import BoneActions from "viur-ui/src/forms/bones/boneActions.vue"
-import WrapperNested from "viur-ui/src/forms/bones/wrapper_nested.vue"
+import Bone from "viur-ui/src/forms/bones/Bone.vue"
+import BoneLabel from "viur-ui/src/forms/bones/BoneLabel.vue"
+import BoneActions from "viur-ui/src/forms/bones/BoneActions.vue"
+import WrapperNested from "viur-ui/src/forms/bones/BoneNestedWrapper.vue"
 import ViFormCategory from "viur-ui/src/forms/ViFormCategory.vue"
 
 const i18n = createI18n({ legacy: false, locale: "de", messages: {} })

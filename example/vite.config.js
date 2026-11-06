@@ -2,7 +2,7 @@ import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
 import path from "path"
 
-const fromExampleNodeModules = (pkg) => path.resolve(__dirname, "node_modules", pkg)
+const fromExampleNodeModules = (pkg) => path.resolve(import.meta.dirname, "node_modules", pkg)
 
 export default defineConfig({
   plugins: [

@@ -26,7 +26,7 @@
       :collapsed-categories="
         state.isLastEntry ? [] : bone?.params?.['collapsedCategories'] ? bone?.params?.['collapsedCategories'] : []
       "
-      :readonly="mainformState.readonly"
+      :readonly="mainformState.readonly || boneState?.readonly || readonly"
       :boneactions="mainformState.boneactions"
       :actions="parentActionsConfig"
       @change="changeEvent"

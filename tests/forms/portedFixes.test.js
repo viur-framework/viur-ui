@@ -71,6 +71,45 @@ describe("BoneNestedWrapper defaultvalue", () => {
   })
 })
 
+describe("BoneNestedWrapper readonly", () => {
+  /** The ViForm component instance below `vnode`. */
+  function findViForm(vnode) {
+    if (!vnode) return null
+    if (vnode.component) {
+      if (vnode.type === ViForm) return vnode.component
+      return findViForm(vnode.component.subTree)
+    }
+    for (const child of Array.isArray(vnode.children) ? vnode.children : []) {
+      const found = findViForm(child)
+      if (found) return found
+    }
+    return null
+  }
+
+  it.each([
+    [{}, false],
+    [{ form: true }, true],
+    [{ bone: true }, true],
+  ])("passes readonly %o on to the sub fields", async ({ form = false, bone = false }, expected) => {
+    const app = createApp(BoneNestedWrapper, {
+      name: "items",
+      index: 0,
+      lang: null,
+      bone: { params: {}, using: {} },
+      value: {},
+    })
+    app.config.globalProperties.$t = (key) => key
+    app.component("Bone", defineComponent({ render: () => null }))
+    app.provide("boneState", { readonly: bone, bonestructure: {} })
+    app.provide("mainformState", reactive({ skel: {}, readonly: form }))
+    const vm = app.mount(document.createElement("div"))
+    apps.push(app)
+    await nextTick()
+
+    expect(findViForm(vm.$.subTree).props.readonly).toBe(expected)
+  })
+})
+
 describe("dateBone min/max", () => {
   it("passes params.min and params.max to the input", () => {
     const bonestructure = { date: true, time: false, params: { min: "2026-01-01", max: "2026-12-31" } }

@@ -8,7 +8,7 @@ Vue 3 components and request helpers for [ViUR](https://www.viur.dev).
 npm install viur-ui
 ```
 
-Peers: `vue` 3.5+, `pinia` 2–4, `vue-i18n`, `@viur/webawesome`, `@vueuse/core`, `vue-router` 4–5; for code/text bones also `codemirror`, `@codemirror/{commands,language,language-data,state,view}`, `ckeditor5`, `@ckeditor/ckeditor5-vue`.
+Peers: `vue` 3.5+, `pinia` 2–4, `vue-i18n`, `@viur/webawesome`, `@vueuse/core` 12–14, `vue-router` 4–5; for code/text bones also `codemirror`, `@codemirror/{commands,language,language-data,state,view}`, `ckeditor5`, `@ckeditor/ckeditor5-vue`.
 
 ## Vite
 

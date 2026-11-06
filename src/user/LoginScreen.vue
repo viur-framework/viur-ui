@@ -106,7 +106,7 @@
               {{ t(CLASSIC_VIEWS[state.view].submit) }}
             </wa-button>
             <wa-button
-              v-if="state.view === 'start' && state.recoverUrl"
+              v-if="state.view === 'start' && state.recoverUrl && lostPassword"
               appearance="plain"
               size="small"
               class="viur-login__lost"
@@ -244,6 +244,8 @@ const props = defineProps({
   logo: { type: String, default: null },
   // render the multistep progress bar
   showSteps: { type: Boolean, default: false },
+  // offer "lost password?" next to the password login
+  lostPassword: { type: Boolean, default: true },
   // check for an existing session on mount (and skip login if authenticated)
   autoStart: { type: Boolean, default: true },
   // Where to go once the session stands (also when `autoStart` finds an

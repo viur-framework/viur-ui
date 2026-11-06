@@ -7,6 +7,8 @@
       :class="([`bone-widget-password-${name}`], { 'has-check': state.needsConfirm })"
       :disabled="boneState.readonly"
       type="password"
+      :name="name"
+      :autocomplete="state.needsConfirm ? 'new-password' : 'current-password'"
       with-clear
       password-toggle="true"
       :placeholder="state.placeholder"
@@ -27,6 +29,7 @@
       class="bone-widget bone-widget-boolean bone-widget-boolean-default bone-widget-boolean-repeat bone-widget-password-check"
       :class="[`bone-widget-boolean-${name}`]"
       type="password"
+      autocomplete="new-password"
       with-clear
       password-toggle="true"
       :placeholder="state.placeholder"

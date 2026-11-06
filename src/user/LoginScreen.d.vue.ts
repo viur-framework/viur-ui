@@ -31,6 +31,8 @@ export interface LoginScreenProps {
   logo?: string | null
   /** Show the progress bar of the multistep form. */
   showSteps?: boolean
+  /** Offer "lost password?" next to the password login (default: true). */
+  lostPassword?: boolean
   /** On mount, check for an existing session and skip the login. */
   autoStart?: boolean
   /**

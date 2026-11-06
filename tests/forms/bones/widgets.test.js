@@ -115,6 +115,19 @@ describe("passwordBone", () => {
     expect(changes.at(-1).slice(1)).toEqual(["secret", undefined, undefined, true])
   })
 
+  it("names the field and asks for the current password at a login", () => {
+    const { el } = mountWidget(PasswordBone, { value: null }, {})
+    const input = el.querySelector("wa-input")
+    expect(input.getAttribute("name")).toBe("field")
+    expect(input.getAttribute("autocomplete")).toBe("current-password")
+  })
+
+  it("asks for a new password when the structure has tests", () => {
+    const { el } = mountWidget(PasswordBone, { value: null }, { tests: [[".{3,}", "too short", true]] })
+    const inputs = [...el.querySelectorAll("wa-input")]
+    expect(inputs.map((input) => input.getAttribute("autocomplete"))).toEqual(["new-password", "new-password"])
+  })
+
   it("is valid on the keystroke that makes both fields equal", () => {
     const { el, changes } = mountWidget(
       PasswordBone,

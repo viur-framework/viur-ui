@@ -73,12 +73,12 @@ let app = null
 let el = null
 const onSuccess = vi.fn()
 
-function mountScreen() {
+function mountScreen(props = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
   el = document.createElement("div")
   document.body.appendChild(el)
-  app = createApp(LoginScreen, { googleClientId: false, onSuccess })
+  app = createApp(LoginScreen, { googleClientId: false, onSuccess, ...props })
   app.use(pinia)
   app.mount(el)
   return el
@@ -126,5 +126,21 @@ describe("LoginScreen classic chain with envelope v2 answers", () => {
     await vi.waitFor(() => expect(onSuccess).toHaveBeenCalled())
 
     expect(sent).toEqual([PASSWORD_URL, OTP_URL])
+  })
+})
+
+describe("LoginScreen lost password", () => {
+  it("offers the recovery next to the password login by default", async () => {
+    stubFetch()
+    const root = mountScreen()
+    await vi.waitFor(() => expect(root.querySelector(".viform-stub")).not.toBeNull())
+    expect(root.querySelector(".viur-login__lost")).not.toBeNull()
+  })
+
+  it("hides the recovery with lostPassword false", async () => {
+    stubFetch()
+    const root = mountScreen({ lostPassword: false })
+    await vi.waitFor(() => expect(root.querySelector(".viform-stub")).not.toBeNull())
+    expect(root.querySelector(".viur-login__lost")).toBeNull()
   })
 })

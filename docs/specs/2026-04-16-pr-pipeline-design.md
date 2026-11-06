@@ -63,12 +63,12 @@ lefthook.yml                    # lokale pre-commit Hooks
 
 Alle vier Jobs laufen parallel. Alle sind als Required Checks vorgesehen (Branch-Protection-Config nicht Teil des Specs).
 
-| Job | Dauer (erwartet) | Kommando | Zweck |
-|---|---|---|---|
-| `lint` | ~20 s | `npm run lint` | ESLint inkl. Prettier-Rule |
-| `unit` | ~30 s | `npm run test:run` | Vitest Unit Tests |
-| `coverage-gate` | ~2 s | `node scripts/check-bone-coverage.js` | Struktur-Check: jeder Bone hat Story + Spec |
-| `contract` | ~3–5 min | `npm run test:contract` | Playwright gegen Histoire |
+| Job             | Dauer (erwartet) | Kommando                              | Zweck                                       |
+| --------------- | ---------------- | ------------------------------------- | ------------------------------------------- |
+| `lint`          | ~20 s            | `npm run lint`                        | ESLint inkl. Prettier-Rule                  |
+| `unit`          | ~30 s            | `npm run test:run`                    | Vitest Unit Tests                           |
+| `coverage-gate` | ~2 s             | `node scripts/check-bone-coverage.js` | Struktur-Check: jeder Bone hat Story + Spec |
+| `contract`      | ~3–5 min         | `npm run test:contract`               | Playwright gegen Histoire                   |
 
 ### Shared Setup via Composite Action
 
@@ -212,14 +212,14 @@ Das Anheben auf `error` deckt mit hoher Wahrscheinlichkeit bestehende Formatting
 
 ## Risiken und Gegenmaßnahmen
 
-| Risiko | Gegenmaßnahme |
-|---|---|
-| Histoire-Dev-Server startet in CI nicht in 60 s | `reuseExistingServer: !process.env.CI` ist bereits gesetzt → in CI wird frisch gestartet. Timeout bei Bedarf auf 120 s in `playwright.config.ts` erhöhen. |
-| `example/node_modules` fehlt → Alias-Resolving bricht | Composite Action führt `npm ci --prefix example` aus. |
-| Playwright-Browser-Download verlangsamt jeden Run | Eigener Cache-Key basierend auf Playwright-Version in `package-lock.json`. |
-| Coverage-Gate false-positive bei Refactor | Whitelist im Script ist explizit und änderbar; jede Änderung läuft über Code-Review. |
-| `prettier/prettier: "error"` bricht bestehenden Code auf einen Schlag | Einmalige `eslint --fix`-Baseline als separater Commit vor dem Pipeline-Commit. |
-| Lefthook-Hook stört lokal bei emergency commits | Standard-Escape `git commit --no-verify` funktioniert; CI fängt's trotzdem. |
+| Risiko                                                                | Gegenmaßnahme                                                                                                                                             |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Histoire-Dev-Server startet in CI nicht in 60 s                       | `reuseExistingServer: !process.env.CI` ist bereits gesetzt → in CI wird frisch gestartet. Timeout bei Bedarf auf 120 s in `playwright.config.ts` erhöhen. |
+| `example/node_modules` fehlt → Alias-Resolving bricht                 | Composite Action führt `npm ci --prefix example` aus.                                                                                                     |
+| Playwright-Browser-Download verlangsamt jeden Run                     | Eigener Cache-Key basierend auf Playwright-Version in `package-lock.json`.                                                                                |
+| Coverage-Gate false-positive bei Refactor                             | Whitelist im Script ist explizit und änderbar; jede Änderung läuft über Code-Review.                                                                      |
+| `prettier/prettier: "error"` bricht bestehenden Code auf einen Schlag | Einmalige `eslint --fix`-Baseline als separater Commit vor dem Pipeline-Commit.                                                                           |
+| Lefthook-Hook stört lokal bei emergency commits                       | Standard-Escape `git commit --no-verify` funktioniert; CI fängt's trotzdem.                                                                               |
 
 ---
 

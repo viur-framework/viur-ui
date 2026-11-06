@@ -27,7 +27,7 @@ importers:
         specifier: ^6.0.0
         version: 6.43.15
       '@viur/webawesome':
-        specifier: '>=0.10.0'
+        specifier: '>=0.20.0'
         version: 0.20.0(@floating-ui/utils@0.2.12)(@types/react@19.3.0)
       '@vue/compiler-dom':
         specifier: ^3.5.0
@@ -151,8 +151,8 @@ importers:
         specifier: ^6.43.15
         version: 6.43.15
       '@viur/webawesome':
-        specifier: ^0.10.0
-        version: 0.10.0(@floating-ui/utils@0.2.12)(@types/react@19.3.0)
+        specifier: ^0.20.0
+        version: 0.20.0(@floating-ui/utils@0.2.12)(@types/react@19.3.0)
       '@vueuse/core':
         specifier: ^14.2.1
         version: 14.4.0(vue@3.5.45(typescript@6.0.3))
@@ -1679,11 +1679,6 @@ packages:
 
   '@vitest/utils@4.1.12':
     resolution: {integrity: sha512-Q3awXrwOfEV+qc3WmO5ONyE0yO7Q1gQ9/oyHxGLZ/pl7N3NO/ZztqQwKLuwMkV+CA1JYSIeO3gkHnRDIo4AVaA==}
-
-  '@viur/webawesome@0.10.0':
-    resolution: {integrity: sha512-ds/pWGbSJYWtlnzknNzZ7eyMo9yB+ptbLuZAG7O+ZkRCd671kxPWzVKjlQ+HMMxR7i1+wY8VtTuAC3JuI0Z+zA==}
-    engines: {node: '>=14.17.0'}
-    hasBin: true
 
   '@viur/webawesome@0.20.0':
     resolution: {integrity: sha512-yikf+x1RuZpGTQT2GvjB4oxlmPhlHHNLWAteD5x/qjgZP5xuvvaitdjp6hvlY+rNKvEjeqKgR628ohNuiH4m0g==}
@@ -3281,9 +3276,6 @@ packages:
   qified@0.10.1:
     resolution: {integrity: sha512-+Owyggi9IxT1ePKGafcI87ubSmxol6smwJ+RAHDQlx9+9cPwFWDiKFFCPuWhr9ignlGpZ9vDQLw67N4dcTVFEA==}
     engines: {node: '>=20'}
-
-  qr-creator@1.0.0:
-    resolution: {integrity: sha512-C0cqfbS1P5hfqN4NhsYsUXePlk9BO+a45bAQ3xLYjBL3bOIFzoVEjs79Fado9u9BPBD3buHi3+vY+C8tHh4qMQ==}
 
   quansync@0.2.11:
     resolution: {integrity: sha512-AifT7QEbW9Nri4tAwR5M/uzpBuqfZf+zwaEM/QkzEjj7NBuFD2rBuy0K3dE+8wltbezDV7JMA0WfnCPYRSYbXA==}
@@ -6407,21 +6399,6 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.2.0
 
-  '@viur/webawesome@0.10.0(@floating-ui/utils@0.2.12)(@types/react@19.3.0)':
-    dependencies:
-      '@ctrl/tinycolor': 4.1.0
-      '@floating-ui/dom': 1.8.0
-      '@lit/react': 1.0.8(@types/react@19.3.0)
-      '@shoelace-style/animations': 1.2.0
-      '@shoelace-style/localize': 3.2.3
-      composed-offset-position: 0.0.6(@floating-ui/utils@0.2.12)
-      lit: 3.3.3
-      nanoid: 5.1.16
-      qr-creator: 1.0.0
-    transitivePeerDependencies:
-      - '@floating-ui/utils'
-      - '@types/react'
-
   '@viur/webawesome@0.20.0(@floating-ui/utils@0.2.12)(@types/react@19.3.0)':
     dependencies:
       '@ctrl/tinycolor': 4.1.0
@@ -8480,8 +8457,6 @@ snapshots:
   qified@0.10.1:
     dependencies:
       hookified: 2.2.0
-
-  qr-creator@1.0.0: {}
 
   quansync@0.2.11: {}
 

@@ -26,10 +26,23 @@ function toSearchParams(params) {
   return qs
 }
 
+/** The x-viur-error header of a response, decoded. Newer viur-core sends it
+ *  percent-encoded UTF-8 (only printable ASCII survives in HTTP headers);
+ *  a plain ASCII message without "%" reads the same either way. */
+function viurErrorHeader(response) {
+  const value = response?.headers?.get?.("x-viur-error")
+  if (!value) return ""
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value // not percent-encoded (older viur-core with a literal "%")
+  }
+}
+
 /** Message of a failed request: viur-core sends its reason as `descr` in the
  *  JSON body (and the x-viur-error header); without one, the fetch error. */
 function serverReason(ctx) {
-  return ctx.data?.["descr"] || ctx.response?.headers?.get?.("x-viur-error") || ctx.error?.message
+  return ctx.data?.["descr"] || viurErrorHeader(ctx.response) || ctx.error?.message
 }
 
 export class HTTPError extends Error {
@@ -755,7 +768,7 @@ export async function uploadFile(
  *  answers with a JSON body carrying `descr` (and the x-viur-error header). */
 async function uploadError(step, response) {
   const body = await response.json().catch(() => null)
-  const descr = body?.["descr"] || response.headers?.get?.("x-viur-error") || ""
+  const descr = body?.["descr"] || viurErrorHeader(response)
   const message = `${step} failed: ${response.status}${descr ? ` - ${descr}` : ""}`
   return new HTTPError(response.status, response.statusText, message, response)
 }

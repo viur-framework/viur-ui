@@ -12,7 +12,8 @@
   "files": [
     "src",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "icons.json"
   ],
   "dependencies": {
     "@vue/compiler-dom": "^3.5.0",
@@ -31,7 +32,7 @@
     "@codemirror/language-data": "^6.5.2",
     "@codemirror/state": "^6.0.0",
     "@codemirror/view": "^6.0.0",
-    "@viur/webawesome": ">=0.10.0",
+    "@viur/webawesome": ">=0.20.0",
     "@vueuse/core": "^12.4.0 || ^13.0.0 || ^14.0.0",
     "ckeditor5": "^45.2.0 || ^46.0.0 || ^47.0.0 || ^48.0.0 || ^49.0.0",
     "codemirror": "^6.0.1",

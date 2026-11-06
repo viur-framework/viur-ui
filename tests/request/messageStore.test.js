@@ -214,6 +214,19 @@ describe("request layer integration", () => {
     expect(useMessageStore().latest).toMatchObject({ type: "error", status: 400, text: "Invalid filter" })
   })
 
+  it.each([
+    ["Datei%20zu%20gro%C3%9F%20%E2%80%93%20max.%2010%20MB", "Datei zu groß – max. 10 MB"],
+    ["Plain reason", "Plain reason"],
+    ["100% kaputt", "100% kaputt"],
+  ])("HTTP error without a body reason decodes the x-viur-error header %s", async (header, text) => {
+    const response = jsonResponse(null, 403)
+    response.headers = { get: (k) => (k === "x-viur-error" ? header : null) }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response))
+    const list = useListFetch("ticket")
+    await waitUntilFinished(list)
+    expect(useMessageStore().latest).toMatchObject({ type: "error", status: 403, text })
+  })
+
   it("GET success pushes nothing", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ action: "view", values: { key: "k1" } })))
     const result = useViewFetch("user", "/", { key: "k1" })

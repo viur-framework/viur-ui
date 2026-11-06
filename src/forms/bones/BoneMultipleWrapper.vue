@@ -49,7 +49,6 @@ const state = reactive({
   }),
 })
 
-
 const boneState = inject("boneState")
 const updateValue = inject("updateValue")
 </script>

@@ -10,23 +10,25 @@ wa-color-picker {
   --wa-form-control-required-content: "";
 }
 
-wa-input::part(form-control-label),
-wa-input::part(label),
-wa-textarea::part(form-control-label),
-wa-textarea::part(label),
-wa-select::part(form-control-label),
-wa-select::part(label),
-wa-combobox::part(form-control-label),
-wa-combobox::part(label),
-wa-checkbox::part(form-control-label),
-wa-checkbox::part(label),
-wa-switch::part(form-control-label),
-wa-switch::part(label),
-wa-radio-group::part(form-control-label),
-wa-radio-group::part(label),
-wa-date-picker::part(form-control-label),
-wa-date-picker::part(label),
-wa-color-picker::part(form-control-label),
-wa-color-picker::part(label) {
+/* Bones render their own label (Bone.vue / bone-label), so hide the one of the
+   widget there - only there: fields of the app outside ViForm keep their labels. */
+.bone wa-input::part(form-control-label),
+.bone wa-input::part(label),
+.bone wa-textarea::part(form-control-label),
+.bone wa-textarea::part(label),
+.bone wa-select::part(form-control-label),
+.bone wa-select::part(label),
+.bone wa-combobox::part(form-control-label),
+.bone wa-combobox::part(label),
+.bone wa-checkbox::part(form-control-label),
+.bone wa-checkbox::part(label),
+.bone wa-switch::part(form-control-label),
+.bone wa-switch::part(label),
+.bone wa-radio-group::part(form-control-label),
+.bone wa-radio-group::part(label),
+.bone wa-date-picker::part(form-control-label),
+.bone wa-date-picker::part(label),
+.bone wa-color-picker::part(form-control-label),
+.bone wa-color-picker::part(label) {
   display: none;
 }

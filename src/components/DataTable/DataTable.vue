@@ -1144,20 +1144,19 @@ const state = reactive({
   sort: computed((): SortEntry[] => sort.value),
 
   /** Filter/search/sort/grouping — in server mode the server does this. */
-  built: computed(
-    (): BuiltRows<R> =>
-      buildRows<R>({
-        data: (state.nested as NestedTree<R> | null)?.roots ?? (state.rows as R[]),
-        columns: state.columns,
-        sort: state.isServer ? [] : sort.value,
-        filters: state.isServer ? [] : filters.value,
-        search: state.isServer ? "" : search.value,
-        searchFn: props.searchFn,
-        childRows: state.childAccessor as ChildRowsAccessor<R> | null,
-        filterFromLeafRows: props.filterFromLeafRows,
-        groupBy: state.groupByList,
-        rowKey: props.rowKey,
-      })
+  built: computed((): BuiltRows<R> =>
+    buildRows<R>({
+      data: (state.nested as NestedTree<R> | null)?.roots ?? (state.rows as R[]),
+      columns: state.columns,
+      sort: state.isServer ? [] : sort.value,
+      filters: state.isServer ? [] : filters.value,
+      search: state.isServer ? "" : search.value,
+      searchFn: props.searchFn,
+      childRows: state.childAccessor as ChildRowsAccessor<R> | null,
+      filterFromLeafRows: props.filterFromLeafRows,
+      groupBy: state.groupByList,
+      rowKey: props.rowKey,
+    })
   ),
 
   /** Cursor mode: the caller controls loading more (see hasMore). */

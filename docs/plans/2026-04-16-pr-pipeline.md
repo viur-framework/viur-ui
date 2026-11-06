@@ -16,15 +16,15 @@
 
 ## File Structure
 
-| Datei | Status | Verantwortlichkeit |
-|---|---|---|
-| `.nvmrc` | Create | Pin Node-Version (24) für lokale Dev-Umgebungen |
-| `package.json` | Modify | Neue Scripts (`lint`, `format:check`, `prepare`) + Lefthook als devDependency |
-| `eslint.config.js` | Modify | `prettier/prettier` von `warn` → `error` |
-| `lefthook.yml` | Create | Pre-Commit-Hooks für ESLint-Fix + Prettier-Write |
-| `scripts/check-bone-coverage.js` | Create | Strukturgate: jeder echte Bone hat Story + Contract-Spec |
-| `.github/actions/setup/action.yml` | Create | Composite Action: Node-Setup + `npm ci` (root + example) |
-| `.github/workflows/pr.yml` | Create | Haupt-Workflow mit vier parallelen Jobs |
+| Datei                              | Status | Verantwortlichkeit                                                            |
+| ---------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| `.nvmrc`                           | Create | Pin Node-Version (24) für lokale Dev-Umgebungen                               |
+| `package.json`                     | Modify | Neue Scripts (`lint`, `format:check`, `prepare`) + Lefthook als devDependency |
+| `eslint.config.js`                 | Modify | `prettier/prettier` von `warn` → `error`                                      |
+| `lefthook.yml`                     | Create | Pre-Commit-Hooks für ESLint-Fix + Prettier-Write                              |
+| `scripts/check-bone-coverage.js`   | Create | Strukturgate: jeder echte Bone hat Story + Contract-Spec                      |
+| `.github/actions/setup/action.yml` | Create | Composite Action: Node-Setup + `npm ci` (root + example)                      |
+| `.github/workflows/pr.yml`         | Create | Haupt-Workflow mit vier parallelen Jobs                                       |
 
 Alle neuen Files sind klein, fokussiert und haben jeweils genau eine Verantwortlichkeit.
 
@@ -35,38 +35,47 @@ Alle neuen Files sind klein, fokussiert und haben jeweils genau eine Verantwortl
 Bevor `prettier/prettier` auf `error` hochgezogen wird, muss das Repo bereits Prettier-clean sein — sonst blockt die neue Rule jeden PR sofort.
 
 **Files:**
+
 - Modify: arbitrary files (nur Formatting-Verstöße)
 
 - [ ] **Step 1: Aktuellen Stand per ESLint prüfen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npx eslint . 2>&1 | tee /tmp/eslint-baseline.log | tail -40
 ```
+
 Expected: Zeigt alle aktuellen Prettier-Warnings (noch als `warning`, nicht `error`).
 
 - [ ] **Step 2: Auto-Fix über das ganze Repo laufen lassen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npx eslint . --fix
 ```
+
 Expected: Modifiziert Files mit behebbaren Formatting-Verstößen.
 
 - [ ] **Step 3: Ergebnis prüfen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && git diff --stat
 ```
+
 Expected: Liste der geänderten Files. Schnelles visuelles Review via `git diff` stichprobenartig prüfen, dass nur Whitespace/Quotes/Trailing-Commas geändert wurden — kein semantischer Änderungen.
 
 - [ ] **Step 4: Verbleibende ESLint-Issues prüfen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npx eslint . 2>&1 | grep -E "error|warning" | head -20
 ```
+
 Expected: Idealerweise leere Ausgabe. Falls noch nicht-fixbare Prettier-Warnings übrig bleiben (z. B. Vue-Template-Spezialitäten), diese manuell lösen **oder** in einer gezielten `eslint-disable-next-line`-Kommentierung dokumentieren. Keine Stille ignorieren.
 
 - [ ] **Step 5: Commit der Baseline**
@@ -81,22 +90,27 @@ git commit -m "chore(format): apply eslint --fix baseline before rule hardening"
 ## Task 2: ESLint-Rule härten
 
 **Files:**
+
 - Modify: `eslint.config.js:41`
 
 - [ ] **Step 1: `prettier/prettier` auf `error` setzen**
 
 Edit `eslint.config.js` Zeile 41:
+
 ```js
       "prettier/prettier": "error",
 ```
+
 (statt `"warn"`)
 
 - [ ] **Step 2: ESLint erneut laufen lassen, um Härtung zu verifizieren**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npx eslint . 2>&1 | tail -3
 ```
+
 Expected: Gleiche Fehler-Anzahl wie nach Task 1 (241 errors, 386 warnings — bestehender Technical-Debt). **Keine neuen Prettier-Errors auftauchen** — das ist das eigentliche Verifikations-Kriterium. Falls Prettier-Errors auftauchen, war Task 1 nicht vollständig.
 
 - [ ] **Step 3: Commit**
@@ -111,12 +125,14 @@ git commit -m "chore(eslint): elevate prettier/prettier to error for CI enforcem
 ## Task 3: npm-Scripts und `.nvmrc` hinzufügen
 
 **Files:**
+
 - Create: `.nvmrc`
 - Modify: `package.json` (scripts-Block + devDependencies)
 
 - [ ] **Step 1: `.nvmrc` erstellen**
 
 Create `.nvmrc`:
+
 ```
 24
 ```
@@ -124,6 +140,7 @@ Create `.nvmrc`:
 - [ ] **Step 2: npm-Scripts zu `package.json` hinzufügen**
 
 Edit `package.json` scripts-Block. Nach `"test:contract": "..."` folgende Scripts einfügen:
+
 ```json
     "lint": "eslint .",
     "format:check": "prettier --check .",
@@ -131,6 +148,7 @@ Edit `package.json` scripts-Block. Nach `"test:contract": "..."` folgende Script
 ```
 
 Finaler scripts-Block:
+
 ```json
 "scripts": {
     "icons": "npx wa-icons . ./src/public/assets/icons",
@@ -149,27 +167,33 @@ Finaler scripts-Block:
 - [ ] **Step 3: Lefthook als devDependency hinzufügen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npm install --save-dev lefthook
 ```
+
 Expected: Installiert Lefthook. `prepare` ruft danach `lefthook install` auf — das wird im ersten Lauf fehlschlagen, weil `lefthook.yml` noch fehlt. Das ist OK, wir schreiben die Config gleich.
 
 - [ ] **Step 4: Lint-Script auf Funktion testen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npm run lint
 echo "Exit: $?"
 ```
+
 Expected: Exit 0.
 
 - [ ] **Step 5: Format-Check-Script auf Funktion testen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npm run format:check
 echo "Exit: $?"
 ```
+
 Expected: Exit 0 (nach Baseline-Fix in Task 1).
 
 - [ ] **Step 6: Commit**
@@ -184,11 +208,13 @@ git commit -m "chore: add lint/format scripts, .nvmrc and lefthook devDependency
 ## Task 4: Lefthook-Konfiguration
 
 **Files:**
+
 - Create: `lefthook.yml`
 
 - [ ] **Step 1: `lefthook.yml` erstellen**
 
 Create `lefthook.yml`:
+
 ```yaml
 pre-commit:
   parallel: true
@@ -206,26 +232,33 @@ pre-commit:
 - [ ] **Step 2: Hooks installieren**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npx lefthook install
 ```
+
 Expected: `sync hooks: ✔️ (pre-commit)` oder ähnlich.
 
 - [ ] **Step 3: Hooks-Installation verifizieren**
 
 Run:
+
 ```bash
 cat /home/classick/projects/viur-ui/.git/hooks/pre-commit
 ```
+
 Expected: Lefthook-Stub-Script, das `lefthook run pre-commit` aufruft.
 
 - [ ] **Step 4: Smoke-Test des Hooks (optional, muss getestet werden, ohne zu committen)**
 
 Erstellt eine temporäre Test-Datei mit absichtlichem Formatting-Verstoß, staged, dann Lefthook manuell laufen lassen:
+
 ```bash
 cd /home/classick/projects/viur-ui && echo "const  x=1" > /tmp/lefthook-test.js && cp /tmp/lefthook-test.js ./__lefthook_probe.js && git add __lefthook_probe.js && npx lefthook run pre-commit
 ```
+
 Expected: Lefthook läuft beide Jobs parallel, ESLint+Prettier fixen die Datei, `stage_fixed` staged sie neu. Cleanup nach erfolgreichem Lauf:
+
 ```bash
 cd /home/classick/projects/viur-ui && git reset HEAD __lefthook_probe.js && rm __lefthook_probe.js
 ```
@@ -242,15 +275,18 @@ git commit -m "chore(hooks): add lefthook pre-commit for eslint and prettier"
 ## Task 5: Bone-Coverage-Script
 
 **Files:**
+
 - Create: `scripts/check-bone-coverage.js`
 
 - [ ] **Step 1: Entscheidung `jsonBone.vue` klären**
 
 Run:
+
 ```bash
 ls /home/classick/projects/viur-ui/stories/bones/ | grep -i json
 ls /home/classick/projects/viur-ui/tests/contract/bone-widgets/ | grep -i json
 ```
+
 Expected: Beide Kommandos → keine Ausgabe. Weder Story noch Spec vorhanden.
 
 **Entscheidung (aus Spec übernommen):** `jsonBone.vue` wandert in die Whitelist, bis Story + Spec nachgezogen werden. Als separater Backlog-Task außerhalb dieses Plans dokumentieren.
@@ -320,7 +356,7 @@ function main() {
     console.error("Bone coverage check failed:")
     console.error(problems.join("\n"))
     console.error(
-      "\nAdd the missing artefacts or extend the whitelist in scripts/check-bone-coverage.js with justification.",
+      "\nAdd the missing artefacts or extend the whitelist in scripts/check-bone-coverage.js with justification."
     )
     process.exit(1)
   }
@@ -334,11 +370,14 @@ main()
 - [ ] **Step 3: Script gegen aktuellen Repo-Stand laufen lassen (positive Verifikation)**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && node scripts/check-bone-coverage.js
 echo "Exit: $?"
 ```
+
 Expected:
+
 ```
 Bone coverage check passed (17 bones verified).
 Exit: 0
@@ -347,12 +386,15 @@ Exit: 0
 - [ ] **Step 4: Negativ-Verifikation (temporäres Umbenennen)**
 
 Absichtlich eine Story verstecken, Script muss rot werden:
+
 ```bash
 cd /home/classick/projects/viur-ui && mv stories/bones/StringBone.story.vue stories/bones/StringBone.story.vue.bak
 node scripts/check-bone-coverage.js
 echo "Exit: $?"
 ```
+
 Expected:
+
 ```
 Bone coverage check failed:
   - stringBone.vue: missing story (expected: stories/bones/StringBone.story.vue)
@@ -364,11 +406,13 @@ Exit: 1
 - [ ] **Step 5: State wiederherstellen**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && mv stories/bones/StringBone.story.vue.bak stories/bones/StringBone.story.vue
 node scripts/check-bone-coverage.js
 echo "Exit: $?"
 ```
+
 Expected: Exit 0, Meldung „passed (17 bones verified)".
 
 - [ ] **Step 6: Commit**
@@ -385,11 +429,13 @@ git commit -m "feat(ci): add bone-coverage gate script"
 Kapselt Node + `npm ci` (Root + `example/`), wird von allen vier Jobs wiederverwendet.
 
 **Files:**
+
 - Create: `.github/actions/setup/action.yml`
 
 - [ ] **Step 1: Verzeichnisstruktur anlegen und Action schreiben**
 
 Create `.github/actions/setup/action.yml`:
+
 ```yaml
 name: "Setup viur-ui"
 description: "Node 24 + npm ci in root and example/"
@@ -427,11 +473,13 @@ git commit -m "ci: add composite setup action for Node and npm install"
 ## Task 7: PR-Workflow
 
 **Files:**
+
 - Create: `.github/workflows/pr.yml`
 
 - [ ] **Step 1: Workflow schreiben**
 
 Create `.github/workflows/pr.yml`:
+
 ```yaml
 name: PR
 
@@ -450,7 +498,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    continue-on-error: true  # 241 pre-existing errors in codebase; separate backlog task tracks cleanup
+    continue-on-error: true # 241 pre-existing errors in codebase; separate backlog task tracks cleanup
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -512,6 +560,7 @@ jobs:
 ```
 
 Anmerkungen zum Design:
+
 - `coverage-gate` braucht kein `npm ci` → eigener schlanker Setup, spart Sekunden
 - `contract`-Job teilt sich Playwright-Browser-Cache über Runs, aber installiert bei Miss nur Chromium (nicht firefox/webkit)
 - `if: steps.playwright-cache.outputs.cache-hit == 'true'` → System-Deps (wie libnss3, libatk) müssen trotzdem jedes Mal installiert werden, Cache betrifft nur die Browser-Binaries
@@ -521,9 +570,11 @@ Anmerkungen zum Design:
 - [ ] **Step 2: YAML-Syntax lokal validieren (optional)**
 
 Falls `actionlint` verfügbar:
+
 ```bash
 cd /home/classick/projects/viur-ui && actionlint .github/workflows/pr.yml
 ```
+
 Oder per Online-Tool, falls nicht installiert. Kein Blocker — GitHub validiert beim ersten Run.
 
 - [ ] **Step 3: Commit**
@@ -544,52 +595,65 @@ Bevor ein Test-PR geöffnet wird, alles lokal einmal laufen lassen.
 - [ ] **Step 1: Lint komplett**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npm run lint
 echo "Exit: $?"
 ```
+
 Expected: Exit 0.
 
 - [ ] **Step 2: Unit-Tests komplett**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npm run test:run
 echo "Exit: $?"
 ```
+
 Expected: Exit 0, alle existierenden Tests grün.
 
 - [ ] **Step 3: Coverage-Gate**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && node scripts/check-bone-coverage.js
 echo "Exit: $?"
 ```
+
 Expected: Exit 0, „17 bones verified".
 
 - [ ] **Step 4: Contract-Tests (lang, 3-5 min)**
 
 Run:
+
 ```bash
 cd /home/classick/projects/viur-ui && npm run test:contract
 echo "Exit: $?"
 ```
+
 Expected: Exit 0. Falls flaky (Histoire-Startup-Timing), ein Re-Run ist akzeptabel.
 
 - [ ] **Step 5: Lefthook-Fire-Probe**
 
 Minimaler echter Commit mit vorsätzlicher Formatierung testen:
+
 ```bash
 cd /home/classick/projects/viur-ui && echo 'const  x   =1' > __probe.js && git add __probe.js && git commit -m "probe: lefthook test" --allow-empty-message 2>&1 | head -20
 ```
+
 Expected: Lefthook-Output zeigt eslint + prettier laufend, der Commit landet mit gefixter Datei. Check:
+
 ```bash
 cd /home/classick/projects/viur-ui && cat __probe.js
 ```
+
 Expected: `const x = 1` (formatiert).
 
 Cleanup:
+
 ```bash
 cd /home/classick/projects/viur-ui && git rm __probe.js && git commit -m "cleanup: remove probe"
 ```
@@ -636,14 +700,17 @@ EOF
 - [ ] **Step 3: Alle vier Jobs müssen grün werden**
 
 Run:
+
 ```bash
 gh pr checks --watch
 ```
+
 Expected: Alle vier Checks grün binnen ~5 Min.
 
 - [ ] **Step 4: Künstlichen Fail provozieren (Akzeptanztest des Coverage-Gates)**
 
 Auf demselben Branch:
+
 ```bash
 cd /home/classick/projects/viur-ui && git mv stories/bones/StringBone.story.vue stories/bones/StringBone.story.vue.bak && git commit -m "test: probe coverage-gate (will revert)" && git push
 ```
@@ -651,9 +718,11 @@ cd /home/classick/projects/viur-ui && git mv stories/bones/StringBone.story.vue 
 - [ ] **Step 5: CI muss rot sein, nur der `coverage-gate`-Job**
 
 Run:
+
 ```bash
 gh pr checks
 ```
+
 Expected: `coverage-gate` = FAIL mit Meldung zu `stringBone.vue`. Andere Jobs können grün oder rot sein (Stories-Build könnte auch brechen) — entscheidend ist, dass Coverage-Gate sauber fehlschlägt.
 
 - [ ] **Step 6: Probe-Commit revertieren**
@@ -661,6 +730,7 @@ Expected: `coverage-gate` = FAIL mit Meldung zu `stringBone.vue`. Andere Jobs k�
 ```bash
 cd /home/classick/projects/viur-ui && git revert HEAD --no-edit && git push
 ```
+
 Expected: Neuer Run, alle vier Jobs wieder grün.
 
 - [ ] **Step 7: PR mergen (nachdem Reviewer zugestimmt hat)**

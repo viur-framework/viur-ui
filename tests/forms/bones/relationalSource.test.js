@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb"
 import { resetState, HTTPError } from "../../../src/request/request.js"
 import { useRelationalSource } from "../../../src/forms/bones/relationalSource.js"
+import Utils from "../../../src/forms/bones/utils.js"
 
 function jsonResponse(data, status = 200) {
   return {
@@ -117,5 +118,28 @@ describe("useRelationalSource", () => {
     await vi.advanceTimersByTimeAsync(300)
     for (const items of await Promise.all(calls)) expect(items.map((item) => item.value)).toEqual(["abc"])
     expect(urls).toHaveLength(1)
+  })
+})
+
+describe("useRelationalSource suggestion text", () => {
+  // viur-core stores strings escaped; Utils.formatString unescapes them again
+  const named = (name) => ({ skellist: [{ key: "k1", name }], cursor: "", orders: [] })
+
+  it("escapes the text, which wa-combobox renders as HTML", async () => {
+    stubFetch(() => named("&lt;img src=x onerror=alert(1)&gt; &amp; Co &#40;1&#41;"))
+    const [item] = await settle(useRelationalSource(boneState(), Utils.formatString)(""))
+
+    expect(item.text).toBe("&lt;img src=x onerror=alert(1)&gt; &amp;amp; Co (1)")
+    expect(item.value).toBe("k1")
+  })
+
+  it("shows the typed text of an entry once rendered", async () => {
+    stubFetch(() => named("Muster &#40;FFZ&#41; <b>"))
+    const [item] = await settle(useRelationalSource(boneState(), Utils.formatString)(""))
+    const option = document.createElement("div")
+    option.innerHTML = item.text
+
+    expect(option.textContent).toBe("Muster (FFZ) <b>")
+    expect(option.children).toHaveLength(0)
   })
 })

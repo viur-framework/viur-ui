@@ -15,7 +15,18 @@ import { useListFetch } from "../../request/index.js"
  * @param {object} boneState - Injected bone state (`bonestructure.type/module/format`)
  * @param {Function} formatString - Injected formatter
  * @returns {(search?: string) => Promise<{ text: string, value: string, data: object }[]>}
+ *   `text` is HTML-escaped (wa-combobox renders it as HTML); `data` is the raw skeleton.
  */
+/** Text as HTML: wa-combobox renders suggestion texts with `unsafeHTML`. */
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 export function useRelationalSource(boneState, formatString) {
   let latest = null
 
@@ -39,7 +50,10 @@ export function useRelationalSource(boneState, formatString) {
       throw error // the widget decides how to show it
     }
     return listFetch.data.value.map((skel) => ({
-      text: formatString(format, { dest: skel }),
+      // formatString unescapes the values viur-core stores escaped, and wa-combobox
+      // puts `text` in as HTML: escape it again, or an entry named
+      // `<img onerror=…>` runs as markup in the suggestions (stored XSS).
+      text: escapeHtml(formatString(format, { dest: skel })),
       value: skel.key,
       data: skel,
     }))

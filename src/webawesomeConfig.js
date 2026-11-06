@@ -1,5 +1,6 @@
-// Theme & base styles
-import "@viur/webawesome/dist/styles/themes/awesome.css"
+// Theme & base styles. webawesome.css brings the default theme. Do not import
+// themes/awesome.css here: it loads fonts from fonts.bunny.net (third party,
+// visitor IP, CSP) and only takes effect with class="wa-theme-awesome" anyway.
 import "@viur/webawesome/dist/styles/webawesome.css"
 import "./webawesomeCompat.css"
 
@@ -54,8 +55,6 @@ import "@viur/webawesome/dist/components/tree-item/tree-item"
 
 import { setBasePath } from "@viur/webawesome/dist/utilities/base-path"
 
-if (import.meta.env.DEV) {
-  setBasePath("/webawesome")
-} else {
-  setBasePath("webawesome")
-}
+// Absolute from the app's base: a relative "webawesome" broke icons and assets
+// on deeper routes (/app/user/edit → /app/user/webawesome/…). BASE_URL ends with "/".
+setBasePath(`${import.meta.env?.BASE_URL ?? "/"}webawesome`)

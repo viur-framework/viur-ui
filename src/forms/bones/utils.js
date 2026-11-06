@@ -243,7 +243,9 @@ export default class Utils {
       if (options.language === "*") {
         const primary = options.primaryLanguage
         const ordered =
-          primary && languages.includes(primary) ? [primary, ...languages.filter((lang) => lang !== primary)] : languages
+          primary && languages.includes(primary)
+            ? [primary, ...languages.filter((lang) => lang !== primary)]
+            : languages
         return ordered
           .filter((lang) => !isEmpty(value[lang]))
           .map((lang) => `${Utils.languageTag(lang)} ${Utils.monolingualToString(value[lang], bone, options)}`)

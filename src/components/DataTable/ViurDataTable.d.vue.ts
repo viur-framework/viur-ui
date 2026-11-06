@@ -15,6 +15,10 @@ export interface ViurDataTableProps {
   columns?: unknown[] | null
   /** Only these bones as columns (for derived columns). */
   bones?: string[] | null
+  /** Columns appended after the derived (or given) ones, e.g. an action column filled via `cell:<id>`. */
+  extraColumns?: unknown[] | null
+  /** Extends/overrides derived columns per bone. */
+  columnOverrides?: Record<string, Record<string, unknown>> | null
   label?: string | null
   selectable?: false | "single" | "multiple"
   /** Entries per load (ViUR `limit`). */

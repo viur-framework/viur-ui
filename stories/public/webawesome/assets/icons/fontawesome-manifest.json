@@ -1,8 +1,10 @@
 {
   "package": "@fortawesome/fontawesome-free",
-  "version": "7.2.0",
-  "totalRequested": 14,
-  "copied": 14,
+  "version": "7.3.1",
+  "totalRequested": 30,
+  "copied": 30,
+  "fallbackFolder": null,
+  "fellBack": [],
   "missing": [],
-  "timestamp": "2026-03-26T08:36:14.058Z"
+  "timestamp": "2026-11-06T17:23:15.643Z"
 }

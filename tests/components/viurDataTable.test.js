@@ -83,6 +83,16 @@ describe("ViurDataTable", () => {
     expect(table.props.server).toBe(false)
   })
 
+  it("appends extra columns, e.g. an action column, after the derived ones", () => {
+    mount({ extraColumns: [{ id: "actions", label: "Actions" }] })
+    expect(table.props.columns.map((column) => column.field ?? column.id)).toEqual(["name", "actions"])
+  })
+
+  it("hands column overrides on to the derived columns", () => {
+    mount({ columnOverrides: { name: { width: 321 } } })
+    expect(table.props.columns[0]).toMatchObject({ field: "name", width: 321 })
+  })
+
   it("hides custom columns the user switched off", async () => {
     const exposed = mount({
       columns: [

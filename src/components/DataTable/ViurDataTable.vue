@@ -77,6 +77,11 @@ const props = defineProps({
   columns: { type: Array, default: null },
   /** Only these bones as columns (for derived columns). */
   bones: { type: Array, default: null },
+  /** Columns appended after the derived (or given) ones, e.g. an action column
+   *  `{ id: "actions", label: "…" }` filled via the `cell:actions` slot. */
+  extraColumns: { type: Array, default: null },
+  /** Extends/overrides derived columns per bone: `{ name: { width: 200 } }`. */
+  columnOverrides: { type: Object, default: null },
   /** Accessible label; default: module name. */
   label: { type: String, default: null },
   selectable: { type: [String, Boolean], default: "multiple" },
@@ -156,12 +161,15 @@ const effectiveColumns = computed(() => {
     ...(props.language ? { language: props.language } : {}),
     ...(props.primaryLanguage ? { primaryLanguage: props.primaryLanguage } : {}),
     ...(props.locale ? { locale: props.locale } : {}),
+    ...(props.columnOverrides ? { overrides: props.columnOverrides } : {}),
     exclude: ["key"],
     local: allLoaded.value,
     boolTexts: [t("bones.bool.true"), t("bones.bool.false")],
   })
-  const columns = props.columns ?? (derived.length ? derived : null)
-  if (!columns) return fallbackColumns(rows.value[0])
+  const columns = [
+    ...(props.columns ?? (derived.length ? derived : fallbackColumns(rows.value[0]))),
+    ...(props.extraColumns ?? []),
+  ]
   return columns.map((column) => ({
     ...column,
     hidden: hiddenFields.value

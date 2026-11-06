@@ -61,7 +61,7 @@ function handleAdd() {
     clearTimeout(state.debounce)
   }
   state.debounce = setTimeout(() => {
-    for (let i = state.counter; i--; ) {
+    for (let i = state.counter; i--;) {
       addMultipleEntry(props.lang)
     }
     state.counter = 0

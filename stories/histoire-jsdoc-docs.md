@@ -40,11 +40,11 @@ Aber: Auch damit bräuchte man ein **Custom Vite Plugin**, das die Metadaten ext
 
 ## Optionen für viur-ui
 
-| Option | Aufwand | Ergebnis |
-|---|---|---|
-| `<docs lang="md">` manuell schreiben | gering | sauber, kontrolliert |
-| Custom Vite Plugin mit `@vue/language-tools` | hoch | vollautomatisch |
-| Skript das Markdown aus JSDoc generiert (Build-Step) | mittel | halbautomatisch |
+| Option                                               | Aufwand | Ergebnis             |
+| ---------------------------------------------------- | ------- | -------------------- |
+| `<docs lang="md">` manuell schreiben                 | gering  | sauber, kontrolliert |
+| Custom Vite Plugin mit `@vue/language-tools`         | hoch    | vollautomatisch      |
+| Skript das Markdown aus JSDoc generiert (Build-Step) | mittel  | halbautomatisch      |
 
 ## Empfehlung
 

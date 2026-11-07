@@ -118,7 +118,7 @@ async function describe() {
       {
         filekey: props.params.value.dest.key,
         context: JSON.stringify(viform?.value?.state?.skel),
-        prompt: state.prompt,
+        prompt: state.prompt ?? undefined,
         language: state.currentLang,
       },
       { immediate: false }

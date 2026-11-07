@@ -195,7 +195,10 @@ export function useFormUtils(props, state) {
           }
           result.push({ [`${currentFieldName}.key`]: val["dest"]["key"] })
         } else {
-          result.push({ [`${currentFieldName}`]: null })
+          // viur-core cannot store `rel` without a relation: say so instead of dropping it silently.
+          // multiple: skip the row (`name.idx=""` is ignored or, with languages, breaks the server)
+          if (val["rel"]) console.warn(`[ViForm] ${currentFieldName}: using data without a relation is not sent`)
+          if (!bone["multiple"]) result.push({ [`${currentFieldName}`]: null })
         }
       } else if (bone["type"].startsWith("spatial") && val) {
         //spatialbones
@@ -228,6 +231,7 @@ export function useFormUtils(props, state) {
 
         if (bone["multiple"]) {
           if (!value) value = []
+          const sentBefore = result.length
           for (const [idx, val] of value.entries()) {
             let currentFieldnameMultiple = currentFieldName
 
@@ -236,8 +240,8 @@ export function useFormUtils(props, state) {
             }
             result = handleEntry(result, currentFieldnameMultiple, bone, val)
           }
-          if (value.length === 0) {
-            result.push({ [currentFieldName]: null }) //send empty multiple fields
+          if (result.length === sentBefore) {
+            result.push({ [currentFieldName]: null }) //send empty multiple fields (also when every row was skipped)
           }
         } else {
           result = handleEntry(result, currentFieldName, bone, value)

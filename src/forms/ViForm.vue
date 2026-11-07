@@ -149,7 +149,7 @@
 import { useI18n } from "vue-i18n"
 import { useFormUtils } from "./utils.js"
 import { v1SelectionFollow } from "../request/index.js"
-import { reactive, watch, onBeforeMount, onMounted, onBeforeUnmount, computed, provide, inject, ref } from "vue"
+import { reactive, watch, onBeforeMount, computed, provide, ref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 import Bone from "./bones/Bone.vue"
@@ -440,41 +440,22 @@ const {
   reload,
 } = useFormUtils(props, state)
 
-// The change event is debounced: it breaks the feedback loop between nested
-// forms and the outer form (outer skel -> props.skel -> initForm). A pending
-// change of a nested form is therefore not yet in the outer state.skel, so
-// the outermost form flushes them before it sends.
+// The change event of the outermost form is debounced for the app. A nested
+// form (`using` / record) reports at once: the props.skel watch below ignores
+// its echo (outer skel -> props.skel), so there is no feedback loop to break,
+// and the outer state.skel never lags behind a nested form.
 let pendingChange = null
-const formUpdateEvent = useDebounceFn(flushChange, 500)
+const formUpdateEvent = props.internal ? flushChange : useDebounceFn(flushChange, 500)
 
 function flushChange() {
-  if (pendingChange === null) return false
+  if (pendingChange === null) return
   const data = pendingChange
   pendingChange = null
   emit("change", data)
-  return true
-}
-
-const nestedFlushes = props.internal ? inject("nestedFlushes", null) : new Set()
-if (!props.internal) {
-  provide("nestedFlushes", nestedFlushes)
-} else if (nestedFlushes) {
-  onMounted(() => nestedFlushes.add(flushChange))
-  onBeforeUnmount(() => nestedFlushes.delete(flushChange))
-}
-
-function flushNestedForms() {
-  // A flush can leave a pending change one level up (form in form), so repeat
-  // until nothing is pending. ponytail: capped instead of proving termination.
-  for (let pass = 0; pass < 10; pass++) {
-    let flushed = false
-    for (const flush of nestedFlushes) flushed = flush() || flushed
-    if (!flushed) return
-  }
 }
 
 function sendData(...args) {
-  flushNestedForms()
+  flushChange()
   return sendDataNow(...args)
 }
 
@@ -489,12 +470,18 @@ watch(
   }
 )
 
+// Re-init only when props.skel differs from our own state.skel: drag & drop of
+// internal forms, resetForm/reload of the outer form, a new skel from the app.
+// The echo of our own change (outer state.skel -> props.skel) is no change;
+// re-initialising on it would replace state.skel, and an echo that lags behind
+// our edits would reset the form to old values (the previous row jumped back
+// when a row was added).
 watch(
   () => props.skel,
-  (oldVal, newVal) => {
-    //dragging internalforms
+  () => {
+    if (JSON.stringify(props.skel ?? null) === JSON.stringify(state.skel)) return
     // structure wont be updated, cause of logic changes on structures
-    initForm(props.skel, undefined, state.value)
+    initForm(props.skel)
     //rerun logics after dragging
     logics()
   },
@@ -568,7 +555,19 @@ async function submitStep() {
   }
 }
 
-defineExpose({ sendData, fetchData, loadStep, submitStep, back, updateSkel, reload, resetForm, state })
+// flush: emit a pending change at once, e.g. before an app saves its copy of state.skel
+defineExpose({
+  sendData,
+  flush: flushChange,
+  fetchData,
+  loadStep,
+  submitStep,
+  back,
+  updateSkel,
+  reload,
+  resetForm,
+  state,
+})
 </script>
 
 <style scoped>

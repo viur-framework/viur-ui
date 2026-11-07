@@ -80,8 +80,8 @@ this store but registered globally by `installViurForms` in
   written without trailing dot. Same word, two syntaxes.
 - `importWidgets` throws as soon as an own widget is registered
   (`bones.add` on a plain object). It has no callers; do not build on it.
-- Because of the init emit, `ViForm` fires `change` (debounced 500 ms, last
-  bone only) right after rendering, before any user input. A host that
+- Because of the init emit, `ViForm` fires `change` (outermost form:
+  debounced 500 ms, last bone only) right after rendering, before any user input. A host that
   treats `change` as "dirty" is wrong from the start.
 - Unknown types fall back to `rawBone`, silently. A typo in the key shows a
   raw text field, no warning.

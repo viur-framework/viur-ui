@@ -55,7 +55,7 @@ async function mountForm(amount, bone = {}) {
 async function type(input, value, valid) {
   input.reportValidity = () => valid
   input.value = value
-  input.dispatchEvent(new Event("keyup"))
+  input.dispatchEvent(new Event("input"))
   await nextTick()
 }
 

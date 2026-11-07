@@ -81,7 +81,8 @@ export declare function useTreeFetch(controller: string | string[], options?: Tr
 
 type ControllerFetchFn = (
   controller: string | string[],
-  args?: string,
+  /** path segments after the endpoint, e.g. a key: `"<key>"` or `["node", key]`; `"/"` adds none */
+  args?: string | string[],
   data?: Record<string, any>,
   ctx?: Record<string, any>
 ) => UseFetchReturn<any>

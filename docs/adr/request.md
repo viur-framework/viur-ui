@@ -53,8 +53,9 @@ login renders, `fetchConfig({ user })` after it; the tree comes from
 ## Traps
 
 - The second argument of `createControllerFetch(...)(controller, args, data)`
-  is ignored for the URL, which always comes from controller + endpoint.
-  Parameters go into `data`: query string for GET, FormData for POST.
+  is appended as path segments after the endpoint (`"<key>"`, `["node", key]`,
+  `"/"` for none), also for POST and in the cache key. It is no data object:
+  parameters go into `data`, query string for GET, FormData for POST.
 - GET `data` uses `new URLSearchParams(data)`: an array becomes `a=1%2C2`,
   not repeated keys. List params do append repeated keys.
 - POST drops `null`/`undefined` values, so the bone stays untouched. To

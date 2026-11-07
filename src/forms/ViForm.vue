@@ -149,7 +149,7 @@
 import { useI18n } from "vue-i18n"
 import { useFormUtils } from "./utils.js"
 import { v1SelectionFollow } from "../request/index.js"
-import { reactive, watch, onBeforeMount, onMounted, onBeforeUnmount, computed, provide, inject, ref } from "vue"
+import { reactive, watch, onBeforeMount, onMounted, onBeforeUnmount, computed, provide, inject, ref, unref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 import Bone from "./bones/Bone.vue"
@@ -272,6 +272,21 @@ const props = defineProps({
    */
   actions: {
     type: [Array, Object],
+    default: null,
+  },
+  /**
+   * Additional query params for every relation query of this form: the
+   * suggestions of the relational bones and `ctx.relationParams` of the bone
+   * actions (for a host selection dialog, e.g. as `params` of ViurBrowser).
+   *
+   *   :relation-params="{ '@orga': orgaKey }"
+   *   :relation-params="(bonestructure) => bonestructure.module === 'user' ? { '@orga': orgaKey } : {}"
+   *
+   * `limit`, `skelType` and the search filter are set by the bone and win.
+   * Passed via provide("relationParams"); nested forms inherit it.
+   */
+  relationParams: {
+    type: [Object, Function],
     default: null,
   },
   layout: {
@@ -423,6 +438,13 @@ provide("formState", state)
 provide(
   "boneActionsConfig",
   computed(() => props.actions)
+)
+// Relation query params (see relationParams prop) — nested forms without
+// their own prop use the outer form's.
+const outerRelationParams = inject("relationParams", null)
+provide(
+  "relationParams",
+  computed(() => props.relationParams ?? unref(outerRelationParams))
 )
 if (!props.internal) {
   provide("mainformState", state)

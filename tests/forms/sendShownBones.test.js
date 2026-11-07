@@ -90,3 +90,46 @@ describe("sendOnlyShownBones", () => {
     expect(fields).toEqual(new Set(["title", "description", "attachments"]))
   })
 })
+
+describe("using row without relation", () => {
+  const relBone = (multiple) => ({
+    type: "relational.tree.leaf.file",
+    visible: true,
+    readonly: false,
+    multiple,
+    params: {},
+    using: { caption: { type: "str", params: {} } },
+  })
+
+  async function sent(bone, value) {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ action: "editSuccess", status: "success", values: {} }))
+    vi.stubGlobal("fetch", fetchMock)
+    const state = { ...makeState(), skel: { images: value }, structure: { images: bone } }
+    await useFormUtils(makeProps({ bones: [] }), reactive(state)).sendData()
+    return [...fetchMock.mock.calls.at(-1)[1].body.entries()]
+  }
+
+  it("multiple: skips the row with a warning, keeps the rows with a relation", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const body = await sent(relBone(true), [
+      { dest: null, rel: { caption: "lost" } },
+      { dest: { key: "f1" }, rel: { caption: "kept" } },
+    ])
+    expect(body).toEqual([
+      ["images.1.caption", "kept"],
+      ["images.1.key", "f1"],
+    ])
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("images.0"))
+  })
+
+  it("multiple: sends the field empty when every row is skipped", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    expect(await sent(relBone(true), [{ dest: null, rel: { caption: "lost" } }])).toEqual([["images", ""]])
+  })
+
+  it("single: empties the relation with a warning", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    expect(await sent(relBone(false), { dest: null, rel: { caption: "lost" } })).toEqual([["images", ""]])
+    expect(warn).toHaveBeenCalledOnce()
+  })
+})

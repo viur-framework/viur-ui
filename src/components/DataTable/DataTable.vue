@@ -14,6 +14,7 @@
       },
     ]"
     :style="state.hostStyle"
+    :aria-busy="state.isLoading || undefined"
   >
     <!-- ── Toolbar: search + columns menu ───────────────────────────── -->
     <div
@@ -2820,9 +2821,11 @@ watch(
 }
 .vi-dt-cell.is-align-center {
   justify-content: center;
+  text-align: center;
 }
 .vi-dt-cell.is-align-end {
   justify-content: flex-end;
+  text-align: end;
 }
 .vi-dt-cell:focus-visible {
   outline: var(--wa-focus-ring);

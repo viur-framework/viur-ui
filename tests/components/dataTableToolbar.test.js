@@ -42,4 +42,14 @@ describe("DataTable toolbar", () => {
     const root = await mountTable({ withSearch: false, withColumnsMenu: false })
     expect(root.querySelector(".vi-dt-toolbar")).toBeNull()
   })
+
+  it("marks the table aria-busy while loading", async () => {
+    const root = await mountTable({ loading: true })
+    expect(root.querySelector(".vi-dt").getAttribute("aria-busy")).toBe("true")
+  })
+
+  it("has no aria-busy when idle", async () => {
+    const root = await mountTable({ loading: false })
+    expect(root.querySelector(".vi-dt").hasAttribute("aria-busy")).toBe(false)
+  })
 })

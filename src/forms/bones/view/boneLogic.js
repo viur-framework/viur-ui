@@ -157,7 +157,7 @@ const boneLogic = (skel, structure, showflags = false, selectedLang = null, t = 
       if (typeof t === "function") {
         return value ? t("bones.bool.true") : t("bones.bool.false")
       }
-      return value ? "Ja" : "Nein"
+      return Utils.boolTexts()[value ? 0 : 1]
     } else if (boneStructure["type"] === "raw.json") {
       return JSON.stringify(value)
     } else {

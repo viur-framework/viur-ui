@@ -56,7 +56,7 @@ export interface ColumnsFromStructureOptions<R extends Row = Row> {
   bones?: string[]
   /** Never show these bones (in addition to the ones hidden anyway). */
   exclude?: string[]
-  /** Labels for `bool` values. */
+  /** Labels for `bool` values (default: Ja/Nein, Yes/No for a non-German `primaryLanguage`/`locale`/`<html lang>`). */
   boolTexts?: [string, string]
   /** Extends/overrides the generated column per bone. */
   overrides?: Record<string, Partial<DataTableColumn<R>>>
@@ -190,7 +190,7 @@ export function badgesForBone(
   options: ColumnsFromStructureOptions = {}
 ): ((value: unknown) => CellBadge[] | null) | null {
   if (bone.type === "bool") {
-    const [yes, no] = options.boolTexts ?? ["Ja", "Nein"]
+    const [yes, no] = Utils.boolTexts(options) as [string, string]
     return (value) => {
       if (value === null || value === undefined || value === "") return null
       const truthy = value === true || value === "true" || value === 1 || value === "1"
@@ -229,7 +229,7 @@ export function boneText(value: unknown, bone: BoneDescription, options: Columns
 function localFilterFor(bone: BoneDescription, options: ColumnsFromStructureOptions): Partial<DataTableColumn> {
   const family = boneFamily(bone.type)
   if (bone.type === "bool") {
-    const [yes, no] = options.boolTexts ?? ["Ja", "Nein"]
+    const [yes, no] = Utils.boolTexts(options) as [string, string]
     return {
       filterable: true,
       filterType: "set",

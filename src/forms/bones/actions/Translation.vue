@@ -118,7 +118,7 @@ async function translate() {
       {
         text: state.value_de,
         language: state.rawLang,
-        characteristic: state.simple ? "simple" : null,
+        characteristic: state.simple ? "simple" : undefined,
       },
       { immediate: false }
     )

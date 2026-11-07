@@ -618,13 +618,12 @@ export function createControllerFetch({
               : (() => {
                   const fd = new FormData()
                   for (const [key, value] of Object.entries(data)) {
-                    if (Array.isArray(value)) {
-                      value.forEach((item) => {
-                        if (item !== null && item !== undefined) fd.append(key, item)
-                      })
-                    } else if (value !== null && value !== undefined) {
-                      fd.append(key, value)
-                    }
+                    // undefined = not sent (optional params); null / [] = sent as ""
+                    // so viur-core sees the field and empties it (missing = keep old value)
+                    if (value === undefined) continue
+                    const items = (Array.isArray(value) ? value : [value]).filter((item) => item != null)
+                    if (!items.length) fd.append(key, "")
+                    items.forEach((item) => fd.append(key, item))
                   }
                   return fd
                 })()

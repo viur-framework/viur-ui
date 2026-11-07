@@ -729,7 +729,7 @@ describe("useEditFetch", () => {
     expect(options.credentials).toBe("include")
   })
 
-  it("null values are omitted from FormData", async () => {
+  it("sends null and empty arrays as '' so the server empties them, omits undefined", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation(async (url) => {
@@ -738,12 +738,21 @@ describe("useEditFetch", () => {
       })
     )
 
-    const result = useEditFetch("items", "/", { name: "x", emptyField: null })
+    const result = useEditFetch("items", "/", {
+      name: "x",
+      emptyField: null,
+      emptyList: [],
+      list: ["a", null, "b"],
+      optional: undefined,
+    })
     await waitUntilFinished(result)
 
     const [, options] = vi.mocked(globalThis.fetch).mock.calls.find(([u]) => u.includes("/edit"))
-    // null should not appear as the string "null"
-    expect(options.body.get("emptyField")).toBeNull()
+    // null must not appear as the string "null"
+    expect(options.body.getAll("emptyField")).toEqual([""])
+    expect(options.body.getAll("emptyList")).toEqual([""])
+    expect(options.body.getAll("list")).toEqual(["a", "b"])
+    expect(options.body.has("optional")).toBe(false)
     expect(options.body.get("name")).toBe("x")
   })
 })

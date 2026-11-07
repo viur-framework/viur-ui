@@ -145,13 +145,17 @@ export interface DataTableResponse<R extends Row = Row> {
   total: number
 }
 
-/** Serializable snapshot of the user-adjustable state. */
-export interface DataTableState {
-  version: 1
+/** Column layout part of `DataTableState` (payload of `layout-change`). */
+export interface DataTableLayout {
   columnOrder?: string[]
   columnWidths?: Record<string, number>
   columnVisibility?: Record<string, boolean>
   columnPinning?: { start: string[]; end: string[] }
+}
+
+/** Serializable snapshot of the user-adjustable state. */
+export interface DataTableState extends DataTableLayout {
+  version: 1
   sort?: SortEntry[]
   filters?: FilterEntry[]
   search?: string

@@ -748,6 +748,7 @@ import type {
   DataTableColumn,
   DataTableRequest,
   DataTableResponse,
+  DataTableLayout,
   DataTableState,
   DisplayRow,
   FilterEntry,
@@ -937,6 +938,13 @@ const emit = defineEmits<{
   "column-resize": [payload: { column: string; width: number; finished: boolean }]
   "column-pin": [payload: { column: string; side: PinSide | false }]
   "column-visibility-change": [payload: { column: string; visible: boolean }]
+  /**
+   * Once after every finished layout change by the user (order, width at
+   * resize end, pin, visibility, auto-size, reset) with the layout part of
+   * `getState()` — store it and restore it with `setState()`. Not while
+   * dragging, not for `setState()` or the silent exposed methods.
+   */
+  "layout-change": [layout: DataTableLayout]
   "page-change": [payload: { page: number; pageSize: number }]
   "row-reorder": [
     payload: {
@@ -1022,10 +1030,22 @@ const layout = useColumnLayout<R>({
   resizable: () => props.resizable,
   reorderable: () => props.reorderable,
   pinnable: () => props.pinnable,
-  onResize: (column, width, finished) => emit("column-resize", { column, width, finished }),
-  onMove: (columnOrder, finished) => emit("column-move", { columnOrder, finished }),
-  onPin: (column, side) => emit("column-pin", { column, side }),
-  onVisibilityChange: (column, visible) => emit("column-visibility-change", { column, visible }),
+  onResize: (column, width, finished) => {
+    emit("column-resize", { column, width, finished })
+    if (finished) emitLayoutChange()
+  },
+  onMove: (columnOrder, finished) => {
+    emit("column-move", { columnOrder, finished })
+    if (finished) emitLayoutChange()
+  },
+  onPin: (column, side) => {
+    emit("column-pin", { column, side })
+    emitLayoutChange()
+  },
+  onVisibilityChange: (column, visible) => {
+    emit("column-visibility-change", { column, visible })
+    emitLayoutChange()
+  },
 })
 
 const state = reactive({
@@ -1144,19 +1164,20 @@ const state = reactive({
   sort: computed((): SortEntry[] => sort.value),
 
   /** Filter/search/sort/grouping — in server mode the server does this. */
-  built: computed((): BuiltRows<R> =>
-    buildRows<R>({
-      data: (state.nested as NestedTree<R> | null)?.roots ?? (state.rows as R[]),
-      columns: state.columns,
-      sort: state.isServer ? [] : sort.value,
-      filters: state.isServer ? [] : filters.value,
-      search: state.isServer ? "" : search.value,
-      searchFn: props.searchFn,
-      childRows: state.childAccessor as ChildRowsAccessor<R> | null,
-      filterFromLeafRows: props.filterFromLeafRows,
-      groupBy: state.groupByList,
-      rowKey: props.rowKey,
-    })
+  built: computed(
+    (): BuiltRows<R> =>
+      buildRows<R>({
+        data: (state.nested as NestedTree<R> | null)?.roots ?? (state.rows as R[]),
+        columns: state.columns,
+        sort: state.isServer ? [] : sort.value,
+        filters: state.isServer ? [] : filters.value,
+        search: state.isServer ? "" : search.value,
+        searchFn: props.searchFn,
+        childRows: state.childAccessor as ChildRowsAccessor<R> | null,
+        filterFromLeafRows: props.filterFromLeafRows,
+        groupBy: state.groupByList,
+        rowKey: props.rowKey,
+      })
   ),
 
   /** Cursor mode: the caller controls loading more (see hasMore). */
@@ -1457,6 +1478,7 @@ const nav = useGridNavigation(scrollerEl, {
       width: cell.col!.width + delta,
       finished: true,
     })
+    emitLayoutChange()
   },
 })
 
@@ -2255,6 +2277,7 @@ function autoSizeColumn(columnId: string): void {
   const width = Math.ceil(widest) + 40 // padding + header tools
   layout.setWidth(columnId, width)
   emit("column-resize", { column: columnId, width, finished: true })
+  emitLayoutChange()
 }
 
 function autoSizeColumns(): void {
@@ -2275,6 +2298,7 @@ function sizeColumnsToFit(): void {
 
 function resetColumns(): void {
   layout.resetColumns()
+  emitLayoutChange()
 }
 
 // ── Pagination ───────────────────────────────────────────────────────
@@ -2450,9 +2474,8 @@ async function copySelectedRows(options: ExportOptions & { format?: "tsv" | "csv
 
 // ── Save / load state ────────────────────────────────────────────────
 
-function getState(): DataTableState {
+function layoutState(): DataTableLayout {
   return {
-    version: 1,
     columnOrder: layout.currentOrder(),
     columnWidths: { ...layout.state.widths },
     columnVisibility: Object.fromEntries(cols().map((column) => [column.id, layout.isVisible(column)])),
@@ -2464,6 +2487,24 @@ function getState(): DataTableState {
         .filter((column) => layout.pinOf(column) === "end")
         .map((column) => column.id),
     },
+  }
+}
+
+// ponytail: one microtask flag, so auto-sizing all columns emits once, not per column.
+let layoutChangeQueued = false
+function emitLayoutChange(): void {
+  if (layoutChangeQueued) return
+  layoutChangeQueued = true
+  queueMicrotask(() => {
+    layoutChangeQueued = false
+    emit("layout-change", layoutState())
+  })
+}
+
+function getState(): DataTableState {
+  return {
+    version: 1,
+    ...layoutState(),
     sort: sort.value,
     filters: filters.value,
     search: search.value,

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { createApp, computed } from "vue"
 import { IDBFactory, IDBKeyRange } from "fake-indexeddb"
 import { resetState, HTTPError } from "../../../src/request/request.js"
 import { useRelationalSource } from "../../../src/forms/bones/relationalSource.js"
@@ -141,5 +142,29 @@ describe("useRelationalSource suggestion text", () => {
 
     expect(option.textContent).toBe("Muster (FFZ) <b>")
     expect(option.children).toHaveLength(0)
+  })
+})
+
+describe("relationParams", () => {
+  it("adds the form's params; limit, skelType and the search filter stay the bone's", async () => {
+    const urls = stubFetch()
+    let getList
+    const app = createApp({
+      setup() {
+        getList = useRelationalSource(boneState("$(dest.name)", "relational.tree.leaf.file"), formatString)
+        return () => null
+      },
+    })
+    app.provide(
+      "relationParams",
+      computed(() => (bone) => ({ "@orga": bone.module, limit: 5, skelType: "node", name$lk: "x" }))
+    )
+    app.mount(document.createElement("div"))
+    await settle(getList("Ent"))
+    app.unmount()
+    expect(urls[0].get("@orga")).toBe("items")
+    expect(urls[0].get("limit")).toBe("99")
+    expect(urls[0].get("skelType")).toBe("leaf")
+    expect(urls[0].get("name$lk")).toBe("Ent")
   })
 })

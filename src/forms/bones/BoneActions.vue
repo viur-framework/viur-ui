@@ -32,6 +32,7 @@
 <script setup>
 import { reactive, computed, onMounted, inject } from "vue"
 import { resolveActions, isActionDisabled, getActionHandler, formConfiguredActions } from "./actions/index.js"
+import { resolveRelationParams } from "./relationalSource.js"
 import ActionDialog from "./actions/ActionDialog.vue"
 
 const emit = defineEmits(["change"])
@@ -67,6 +68,8 @@ const addMultipleEntry = inject("addMultipleEntry", null)
 const removeMultipleEntry = inject("removeMultipleEntry", null)
 // Form-wide action configuration (ViForm `actions` prop).
 const boneActionsConfig = inject("boneActionsConfig", null)
+// Extra query params for relation queries (ViForm `relationParams` prop).
+const relationParams = inject("relationParams", null)
 
 const state = reactive({
   actions: [],
@@ -83,6 +86,8 @@ const ctx = computed(() => ({
   bone: props.bone,
   boneState,
   relationSelector,
+  /** Extra query params of the form for loading relation targets (e.g. in a selection dialog). */
+  relationParams: resolveRelationParams(relationParams, boneState?.bonestructure ?? props.bone),
   multipleRow,
   update: (val) => emit("change", props.name, val, props.lang, props.index),
   /** Append another entry to the multiple array (multi-selection). */

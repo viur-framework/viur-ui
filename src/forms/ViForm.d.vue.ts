@@ -55,6 +55,12 @@ export interface ViFormProps {
    * bones; object = per bone name, `"*"` for all.
    */
   actions?: (string | Record<string, any>)[] | Record<string, (string | Record<string, any>)[]> | null
+  /**
+   * Additional query params for the relation queries of this form (relational
+   * suggestions, `ctx.relationParams` of the bone actions); a function gets the
+   * bone structure. `limit`, `skelType` and the search filter win. Nested forms inherit it.
+   */
+  relationParams?: Record<string, any> | ((bonestructure: Record<string, any>) => Record<string, any>) | null
   /** Run a multi-step flow (login, wizards). */
   multistep?: boolean
   showSteps?: boolean

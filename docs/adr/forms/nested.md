@@ -16,8 +16,6 @@ What crosses the levels, via provide/inject:
 - `formState` - the nearest form.
 - `mainformState` - the outermost form only (provided when `internal` is
   not set). Nested forms take `readonly` and `boneactions` from it.
-- `nestedFlushes` - a Set owned by the outermost form; every nested form
-  registers its pending-change flush there.
 - `boneActionsConfig` - the outer `actions` prop, passed down unchanged.
 - `bonePath` - DOM id path, extended by `lang-<code>` / `idx-<n>`.
 
@@ -29,17 +27,18 @@ skel of the outermost form on every level.
 - Values go up only as the bone's `change` with the complete sub-skel. Do
   not write into `mainformState.skel` from a nested form.
 - Submit only through the outermost form's exposed `sendData` (or
-  `submitStep`); that is where the nested flush happens.
+  `submitStep`). An app that saves `state.skel` itself calls the exposed
+  `flush()` first to emit the outer form's pending `change`.
 
 ## Traps
 
-- Every form debounces `change` by 500 ms and emits only the last change of
-  a burst. The outer `state.skel` lags behind nested edits until the flush;
-  code that reads it directly (own request, computed "dirty") misses them.
-- The nested form watches its `skel` prop deeply: every outer change re-runs
-  `initForm` there, replaces its `pristine` snapshot and recomputes the
-  categories. `values` is not reapplied (the watcher passes `state.value`,
-  which does not exist).
+- A nested form emits `change` at once; only the outermost form debounces
+  it by 500 ms (emitting the last change of a burst). The outer `state.skel`
+  is therefore always current, its `change` event is not.
+- The nested form watches its `skel` prop deeply, but re-runs `initForm`
+  only if the prop differs from its own `state.skel` (drag & drop, reset,
+  new skel from outside). The echo of its own change is ignored; re-running
+  on it used to reset rows to a stale value. `values` is not reapplied.
 - `_skel` skips intermediate levels: a record inside a record cannot address
   its parent record, only the outermost form.
 - Nested forms receive no `errors`. A server error for a sub-bone stays in

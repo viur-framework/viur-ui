@@ -29,6 +29,8 @@ describe("boneText", () => {
     expect(boneText(true, bool)).toBe("Ja")
     expect(boneText(false, bool)).toBe("Nein")
     expect(boneText(true, bool, { boolTexts: ["yes", "no"] })).toBe("yes")
+    expect(boneText(true, bool, { locale: "en-US" })).toBe("Yes")
+    expect(boneText(false, bool, { primaryLanguage: "en" })).toBe("No")
   })
 
   it("select zeigt die Beschriftung, nicht den Schlüssel", () => {

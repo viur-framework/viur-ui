@@ -118,6 +118,17 @@ export default class Utils {
   // format string, `text` contains HTML.
 
   /** Type family of a bone: "str.email" → "str". */
+  /**
+   * Labels for `bool` values: `options.boolTexts`, else by language
+   * (`primaryLanguage`/`locale`/`<html lang>`) — Yes/No unless German.
+   * ponytail: only de/en, apps with more languages pass `boolTexts` from their i18n.
+   */
+  static boolTexts(options = {}) {
+    if (options.boolTexts) return options.boolTexts
+    const lang = options.primaryLanguage || options.locale || globalThis.document?.documentElement.lang || "de"
+    return String(lang).toLowerCase().startsWith("de") ? ["Ja", "Nein"] : ["Yes", "No"]
+  }
+
   static boneFamily(type) {
     return String(type ?? "").split(".")[0]
   }
@@ -141,7 +152,7 @@ export default class Utils {
     if (value === null || value === undefined || value === "") return ""
     switch (Utils.boneFamily(bone["type"])) {
       case "bool": {
-        const [yes, no] = options.boolTexts ?? ["Ja", "Nein"]
+        const [yes, no] = Utils.boolTexts(options)
         return value ? yes : no
       }
       case "select":

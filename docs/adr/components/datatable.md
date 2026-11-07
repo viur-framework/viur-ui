@@ -38,7 +38,11 @@ markup. Also `header:<id>`, `footer:<id>`, `row-detail`, `toolbar-start/end`,
 `cursor-start/end`, `empty`, `no-results`, `loading`.
 
 Layout persistence: `DataTable` stores nothing. Read `getState()`, store it
-yourself, restore with `setState()`. Only `ViurDataTable` persists, and only
+yourself, restore with `setState()`. To know when: `layout-change` fires once
+per finished column change (order, width at resize end, pin, visibility,
+auto-size, reset) with the column part of `getState()`; sort, filters and
+paging have their own events and v-models. `ViurDataTable` and `Browser` do
+not re-emit it, pass `onLayoutChange` via `tableProps`. Only `ViurDataTable` persists, and only
 the hidden-field list under `storageKey`.
 
 ## Rules

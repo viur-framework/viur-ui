@@ -11,24 +11,12 @@ wa-color-picker {
 }
 
 /* Bones render their own label (Bone.vue / bone-label), so hide the one of the
-   widget there - only there: fields of the app outside ViForm keep their labels. */
-.bone wa-input::part(form-control-label),
+   widget there - only there: fields of the app outside ViForm keep their labels.
+   Not wa-checkbox/wa-switch: their part "label" is the option text, not a field label. */
 .bone wa-input::part(label),
-.bone wa-textarea::part(form-control-label),
 .bone wa-textarea::part(label),
 .bone wa-select::part(form-control-label),
-.bone wa-select::part(label),
 .bone wa-combobox::part(form-control-label),
-.bone wa-combobox::part(label),
-.bone wa-checkbox::part(form-control-label),
-.bone wa-checkbox::part(label),
-.bone wa-switch::part(form-control-label),
-.bone wa-switch::part(label),
-.bone wa-radio-group::part(form-control-label),
-.bone wa-radio-group::part(label),
-.bone wa-date-picker::part(form-control-label),
-.bone wa-date-picker::part(label),
-.bone wa-color-picker::part(form-control-label),
-.bone wa-color-picker::part(label) {
+.bone wa-radio-group::part(form-control-label) {
   display: none;
 }

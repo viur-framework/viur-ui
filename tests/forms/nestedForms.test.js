@@ -106,3 +106,56 @@ describe("nested forms", () => {
     expect(changes).toHaveLength(1)
   })
 })
+
+describe("unmounting a form", () => {
+  /** Mounts a single form and returns its `formUpdate` and the emitted changes. */
+  function mountForm() {
+    let update = null
+    const changes = []
+    const Layout = defineComponent({
+      setup() {
+        update = inject("formUpdate")
+        return () => null
+      },
+    })
+    app = createApp({
+      setup: () => () =>
+        h(ViForm, {
+          module: "scheme",
+          action: "add",
+          structure: STRUCTURE,
+          layout: Layout,
+          onChange: (data) => changes.push(data),
+        }),
+    })
+    app.config.globalProperties.$t = (key) => key
+    app.mount(document.createElement("div"))
+    return { update: () => update, changes }
+  }
+
+  it("emits the change still pending in the debounce window", async () => {
+    vi.useFakeTimers()
+    const { update, changes } = mountForm()
+    await nextTick()
+
+    // e.g. the user leaves the view right after typing
+    update()({ name: "percent", value: "25", lang: null, index: null, valid: true })
+    app.unmount()
+    app = null
+
+    expect(changes.map((data) => data.value)).toEqual(["25"])
+  })
+
+  it("does not emit when nothing is pending", async () => {
+    vi.useFakeTimers()
+    const { update, changes } = mountForm()
+    await nextTick()
+
+    update()({ name: "percent", value: "25", lang: null, index: null, valid: true })
+    await vi.advanceTimersByTimeAsync(600)
+    app.unmount()
+    app = null
+
+    expect(changes).toHaveLength(1)
+  })
+})

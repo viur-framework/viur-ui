@@ -455,6 +455,11 @@ function flushChange() {
   return true
 }
 
+// Unmounted inside the debounce window (e.g. the view is left right after
+// typing): emit the pending change now, or the last input never reaches the
+// listener.
+onBeforeUnmount(flushChange)
+
 const nestedFlushes = props.internal ? inject("nestedFlushes", null) : new Set()
 if (!props.internal) {
   provide("nestedFlushes", nestedFlushes)

@@ -108,6 +108,24 @@ describe("BoneNestedWrapper readonly", () => {
 
     expect(findViForm(vm.$.subTree).props.readonly).toBe(expected)
   })
+
+  // #27: use-categories="false" on the outer form must reach record bones too.
+  it.each([
+    [true, {}, true],
+    [false, {}, false],
+    [true, { categoryDefaultname: null }, false],
+  ])("passes useCategories=%s (params %o) on to the sub form", async (useCategories, params, expected) => {
+    const app = createApp(BoneNestedWrapper, { name: "items", bone: { params, using: {} }, value: {} })
+    app.config.globalProperties.$t = (key) => key
+    app.component("Bone", defineComponent({ render: () => null }))
+    app.provide("boneState", { bonestructure: {} })
+    app.provide("mainformState", reactive({ skel: {}, useCategories }))
+    const vm = app.mount(document.createElement("div"))
+    apps.push(app)
+    await nextTick()
+
+    expect(findViForm(vm.$.subTree).props.useCategories).toBe(expected)
+  })
 })
 
 describe("dateBone min/max", () => {

@@ -245,6 +245,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // like the HTML attribute: send without the browser's validity check (empty required
+  // bones, pattern, min/max). Confirming an incomplete form is up to the project.
+  novalidate: {
+    type: Boolean,
+    default: false,
+  },
   // with `bones`: send only those bones (plus key), not every writable bone of the structure
   sendOnlyShownBones: {
     type: Boolean,

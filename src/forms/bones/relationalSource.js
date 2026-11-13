@@ -34,23 +34,31 @@ function escapeHtml(text) {
 /**
  * Extra query params of the ViForm `relationParams` prop for one relational bone.
  *
- * @param {object|Function|null} relationParams - object, or `(bonestructure) => object`
+ * @param {object|Function|null} relationParams - object, or `(bonestructure, { form, mainForm }) => object`
  * @param {object} bonestructure
+ * @param {{ form?: object|null, mainForm?: object|null }} [context] - state of the nearest
+ *   form (in a `using` row / record: that row) and of the outermost form, e.g. `form.skel`
  * @returns {object}
  */
-export function resolveRelationParams(relationParams, bonestructure) {
+export function resolveRelationParams(relationParams, bonestructure, context = {}) {
   const value = unref(relationParams)
-  return (typeof value === "function" ? value(bonestructure) : value) ?? {}
+  const { form = null, mainForm = null } = context
+  return (typeof value === "function" ? value(bonestructure, { form, mainForm }) : value) ?? {}
 }
 
 export function useRelationalSource(boneState, formatString) {
-  const relationParams = hasInjectionContext() ? inject("relationParams", null) : null
+  const injected = hasInjectionContext()
+  const relationParams = injected ? inject("relationParams", null) : null
+  const context = {
+    form: injected ? inject("formState", null) : null,
+    mainForm: injected ? inject("mainformState", null) : null,
+  }
   let latest = null
 
   async function fetchItems(search) {
     const { type, module, format } = boneState.bonestructure
     // the form's params first: limit, skelType and the search filter stay ours
-    const params = { ...resolveRelationParams(relationParams, boneState.bonestructure), limit: 99 }
+    const params = { ...resolveRelationParams(relationParams, boneState.bonestructure, context), limit: 99 }
     if (type.startsWith("relational.tree.leaf")) params.skelType = "leaf"
     else if (type.startsWith("relational.tree.node")) params.skelType = "node"
     // ponytail: only the first bone of the format is searched, e.g. not the lastname in "$(dest.firstname) $(dest.lastname)"

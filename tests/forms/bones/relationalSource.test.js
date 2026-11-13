@@ -157,14 +157,38 @@ describe("relationParams", () => {
     })
     app.provide(
       "relationParams",
-      computed(() => (bone) => ({ "@orga": bone.module, limit: 5, skelType: "node", name$lk: "x" }))
+      computed(() => (bone) => ({ category: bone.module, limit: 5, skelType: "node", name$lk: "x" }))
     )
     app.mount(document.createElement("div"))
     await settle(getList("Ent"))
     app.unmount()
-    expect(urls[0].get("@orga")).toBe("items")
+    expect(urls[0].get("category")).toBe("items")
     expect(urls[0].get("limit")).toBe("99")
     expect(urls[0].get("skelType")).toBe("leaf")
     expect(urls[0].get("name$lk")).toBe("Ent")
+  })
+
+  it("passes the nearest and the outermost form to the function", async () => {
+    const urls = stubFetch()
+    const row = { skel: { customer: "c1" } }
+    const outer = { skel: { kind: "b2b" } }
+    let getList
+    const app = createApp({
+      setup() {
+        getList = useRelationalSource(boneState(), formatString)
+        return () => null
+      },
+    })
+    app.provide("formState", row)
+    app.provide("mainformState", outer)
+    app.provide(
+      "relationParams",
+      computed(() => (bone, { form, mainForm }) => ({ customer: form.skel.customer, kind: mainForm.skel.kind }))
+    )
+    app.mount(document.createElement("div"))
+    await settle(getList(""))
+    app.unmount()
+    expect(urls[0].get("customer")).toBe("c1")
+    expect(urls[0].get("kind")).toBe("b2b")
   })
 })

@@ -58,9 +58,17 @@ export interface ViFormProps {
   /**
    * Additional query params for the relation queries of this form (relational
    * suggestions, `ctx.relationParams` of the bone actions); a function gets the
-   * bone structure. `limit`, `skelType` and the search filter win. Nested forms inherit it.
+   * bone structure and `{ form, mainForm }`: the state of the nearest form (in a
+   * `using` row / record: that row) and of the outermost form. `limit`, `skelType`
+   * and the search filter win. Nested forms inherit it.
    */
-  relationParams?: Record<string, any> | ((bonestructure: Record<string, any>) => Record<string, any>) | null
+  relationParams?:
+    | Record<string, any>
+    | ((
+        bonestructure: Record<string, any>,
+        context: { form: Record<string, any> | null; mainForm: Record<string, any> | null }
+      ) => Record<string, any>)
+    | null
   /** Run a multi-step flow (login, wizards). */
   multistep?: boolean
   showSteps?: boolean

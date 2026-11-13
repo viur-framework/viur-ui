@@ -70,6 +70,8 @@ const removeMultipleEntry = inject("removeMultipleEntry", null)
 const boneActionsConfig = inject("boneActionsConfig", null)
 // Extra query params for relation queries (ViForm `relationParams` prop).
 const relationParams = inject("relationParams", null)
+const formState = inject("formState", null)
+const mainformState = inject("mainformState", null)
 
 const state = reactive({
   actions: [],
@@ -87,7 +89,10 @@ const ctx = computed(() => ({
   boneState,
   relationSelector,
   /** Extra query params of the form for loading relation targets (e.g. in a selection dialog). */
-  relationParams: resolveRelationParams(relationParams, boneState?.bonestructure ?? props.bone),
+  relationParams: resolveRelationParams(relationParams, boneState?.bonestructure ?? props.bone, {
+    form: formState,
+    mainForm: mainformState,
+  }),
   multipleRow,
   update: (val) => emit("change", props.name, val, props.lang, props.index),
   /** Append another entry to the multiple array (multi-selection). */

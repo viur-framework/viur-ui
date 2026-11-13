@@ -278,9 +278,9 @@ const props = defineProps({
    * Additional query params for every relation query of this form: the
    * suggestions of the relational bones and `ctx.relationParams` of the bone
    * actions (for a host selection dialog, e.g. as `params` of ViurBrowser).
-   *
-   *   :relation-params="{ '@orga': orgaKey }"
-   *   :relation-params="(bonestructure) => bonestructure.module === 'user' ? { '@orga': orgaKey } : {}"
+   * A function is called per bone as `(bonestructure, { form, mainForm })`:
+   * `form` is the state of the nearest form (in a `using` row / record: that
+   * row, so `form.skel` holds its values), `mainForm` the outermost form.
    *
    * `limit`, `skelType` and the search filter are set by the bone and win.
    * Passed via provide("relationParams"); nested forms inherit it.

@@ -134,8 +134,7 @@ function runDelete() {
       <pre
         v-if="viewData?.value"
         style="background: #f4f4f4; padding: 0.5rem; overflow: auto; max-height: 200px"
-        >{{ JSON.stringify(viewData.value?.values ?? viewData.value, null, 2) }}</pre
-      >
+        >{{ JSON.stringify(viewData.value?.values ?? viewData.value, null, 2) }}</pre>
     </section>
 
     <!-- useAddFetch -->
@@ -157,8 +156,7 @@ function runDelete() {
       <pre
         v-if="addData?.value"
         style="background: #f4f4f4; padding: 0.5rem; overflow: auto; max-height: 200px"
-        >{{ JSON.stringify(addData.value, null, 2) }}</pre
-      >
+        >{{ JSON.stringify(addData.value, null, 2) }}</pre>
     </section>
 
     <!-- useEditFetch -->
@@ -185,8 +183,7 @@ function runDelete() {
       <pre
         v-if="editData?.value"
         style="background: #f4f4f4; padding: 0.5rem; overflow: auto; max-height: 200px"
-        >{{ JSON.stringify(editData.value, null, 2) }}</pre
-      >
+        >{{ JSON.stringify(editData.value, null, 2) }}</pre>
     </section>
 
     <!-- useDeleteFetch -->
@@ -208,8 +205,7 @@ function runDelete() {
       <pre
         v-if="deleteData?.value"
         style="background: #f4f4f4; padding: 0.5rem; overflow: auto; max-height: 200px"
-        >{{ JSON.stringify(deleteData.value, null, 2) }}</pre
-      >
+        >{{ JSON.stringify(deleteData.value, null, 2) }}</pre>
     </section>
   </div>
 </template>

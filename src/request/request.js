@@ -555,6 +555,12 @@ export function createControllerFetch({
   invalidatesAll = false,
 } = {}) {
   return (controller, args = "/", data = {}, ctx = {}) => {
+    // args are path segments; a data object here would end up as "/[object Object]"
+    if (args != null && !["string", "number"].includes(typeof args) && !Array.isArray(args)) {
+      throw new TypeError(
+        `[request] ${endpoint}: args must be a path ("<key>", ["node", key], "/" for none); data goes into the 3rd argument`
+      )
+    }
     const renderer = ctx.renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
     const {
       version = null,

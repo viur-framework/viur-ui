@@ -633,6 +633,12 @@ describe("useViewFetch", () => {
     expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/json/items/edit/leaf/a%2Fb`)
   })
 
+  it("throws when args is a data object instead of a path", () => {
+    vi.stubGlobal("fetch", vi.fn())
+    expect(() => useViewFetch("items", { key: "a1" })).toThrow(TypeError)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it("cached: true returns cache hit without re-fetching", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ values: { key: "cv1" } }))
     vi.stubGlobal("fetch", fetchMock)

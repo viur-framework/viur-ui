@@ -941,8 +941,9 @@ const emit = defineEmits<{
   /**
    * Once after every finished layout change by the user (order, width at
    * resize end, pin, visibility, auto-size, reset) with the layout part of
-   * `getState()` — store it and restore it with `setState()`. Not while
-   * dragging, not for `setState()` or the silent exposed methods.
+   * `getState()` — store it and restore it with `setState()`. Also after the
+   * exposed `resetColumns()` / `autoSizeColumns()`. Not while dragging, not
+   * for `setState()`, `toggleColumn`, `pinColumn` or `sizeColumnsToFit`.
    */
   "layout-change": [layout: DataTableLayout]
   "page-change": [payload: { page: number; pageSize: number }]
@@ -1164,20 +1165,19 @@ const state = reactive({
   sort: computed((): SortEntry[] => sort.value),
 
   /** Filter/search/sort/grouping — in server mode the server does this. */
-  built: computed(
-    (): BuiltRows<R> =>
-      buildRows<R>({
-        data: (state.nested as NestedTree<R> | null)?.roots ?? (state.rows as R[]),
-        columns: state.columns,
-        sort: state.isServer ? [] : sort.value,
-        filters: state.isServer ? [] : filters.value,
-        search: state.isServer ? "" : search.value,
-        searchFn: props.searchFn,
-        childRows: state.childAccessor as ChildRowsAccessor<R> | null,
-        filterFromLeafRows: props.filterFromLeafRows,
-        groupBy: state.groupByList,
-        rowKey: props.rowKey,
-      })
+  built: computed((): BuiltRows<R> =>
+    buildRows<R>({
+      data: (state.nested as NestedTree<R> | null)?.roots ?? (state.rows as R[]),
+      columns: state.columns,
+      sort: state.isServer ? [] : sort.value,
+      filters: state.isServer ? [] : filters.value,
+      search: state.isServer ? "" : search.value,
+      searchFn: props.searchFn,
+      childRows: state.childAccessor as ChildRowsAccessor<R> | null,
+      filterFromLeafRows: props.filterFromLeafRows,
+      groupBy: state.groupByList,
+      rowKey: props.rowKey,
+    })
   ),
 
   /** Cursor mode: the caller controls loading more (see hasMore). */

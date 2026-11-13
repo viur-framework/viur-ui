@@ -71,12 +71,46 @@ describe("useRelationalSource", () => {
     expect([...urls[0].keys()].some((key) => key.endsWith("$lk"))).toBe(false)
   })
 
-  it("sends the search as a prefix filter on the first bone of the format", async () => {
+  it("sends the search as a prefix filter on the bone of the format", async () => {
     const urls = stubFetch(() => page("Entry"))
-    const getList = useRelationalSource(boneState("$(dest.firstname) $(dest.lastname)"), formatString)
+    const getList = useRelationalSource(boneState("$(dest.name)"), formatString)
     expect((await settle(getList(" Ent "))).map((item) => item.value)).toEqual(["Entry"])
-    expect(urls[0].get("firstname$lk")).toBe("Ent")
+    expect(urls).toHaveLength(1)
+    expect(urls[0].get("name$lk")).toBe("Ent")
     expect(urls[0].get("limit")).toBe("99")
+  })
+
+  it("searches every bone of the format and merges the results in format order", async () => {
+    // "Max Muster": found by the first name as well as by the last name
+    const urls = stubFetch((params) =>
+      params.get("firstname$lk") === "Mus" ? page("Musterfrau", "shared") : page("Max Muster", "shared")
+    )
+    const getList = useRelationalSource(boneState("$(dest.firstname) $(dest.lastname)"), formatString)
+
+    const items = await settle(getList("Mus"))
+
+    expect(urls.map((params) => [...params.keys()].find((key) => key.endsWith("$lk")))).toEqual([
+      "firstname$lk",
+      "lastname$lk",
+    ])
+    expect(urls.every((params) => params.get("limit") === "99")).toBe(true)
+    expect(items.map((item) => item.value)).toEqual(["Musterfrau", "shared", "Max Muster"])
+  })
+
+  it("caps the merged results at 99", async () => {
+    const many = (prefix) => page(...Array.from({ length: 99 }, (_, i) => `${prefix}${i}`))
+    stubFetch((params) => (params.has("firstname$lk") ? many("f") : many("l")))
+    const getList = useRelationalSource(boneState("$(dest.firstname) $(dest.lastname)"), formatString)
+
+    expect(await settle(getList("x"))).toHaveLength(99)
+  })
+
+  it("rejects when one of the per-bone requests fails", async () => {
+    stubFetch((params) => (params.has("lastname$lk") ? "error" : page("a")))
+    const getList = useRelationalSource(boneState("$(dest.firstname) $(dest.lastname)"), formatString)
+    const rejected = expect(getList("x")).rejects.toBeInstanceOf(HTTPError)
+    await vi.advanceTimersByTimeAsync(300)
+    await rejected
   })
 
   it("does not filter when the format names no bone", async () => {

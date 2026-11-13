@@ -21,7 +21,7 @@
       :skel="value"
       :structure="bone['using']"
       :renderer="state.renderer"
-      :use-categories="bone?.params['categoryDefaultname'] !== null"
+      :use-categories="mainformState.useCategories && bone?.params?.['categoryDefaultname'] !== null"
       :category-defaultname="nestedCategory()"
       :collapsed-categories="
         state.isLastEntry ? [] : bone?.params?.['collapsedCategories'] ? bone?.params?.['collapsedCategories'] : []

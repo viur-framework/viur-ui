@@ -1,4 +1,5 @@
 import { useDebounceFn } from "@vueuse/core"
+import { hasInjectionContext, inject, unref } from "vue"
 import { useListFetch } from "../../request/index.js"
 
 /**
@@ -12,6 +13,9 @@ import { useListFetch } from "../../request/index.js"
  * the newest result, so it can't overwrite it.
  *
  * @param {object} boneState - Injected bone state (`bonestructure.type/module/format`)
+ * Additional query params come from the ViForm `relationParams` prop
+ * (provide("relationParams")), see `resolveRelationParams`.
+ *
  * @param {Function} formatString - Injected formatter
  * @returns {(search?: string) => Promise<{ text: string, value: string, data: object }[]>}
  *   `text` is HTML-escaped (wa-combobox renders it as HTML); `data` is the raw skeleton.
@@ -26,12 +30,34 @@ function escapeHtml(text) {
     .replace(/'/g, "&#39;")
 }
 
+/**
+ * Extra query params of the ViForm `relationParams` prop for one relational bone.
+ *
+ * @param {object|Function|null} relationParams - object, or `(bonestructure, { form, mainForm }) => object`
+ * @param {object} bonestructure
+ * @param {{ form?: object|null, mainForm?: object|null }} [context] - state of the nearest
+ *   form (in a `using` row / record: that row) and of the outermost form, e.g. `form.skel`
+ * @returns {object}
+ */
+export function resolveRelationParams(relationParams, bonestructure, context = {}) {
+  const value = unref(relationParams)
+  const { form = null, mainForm = null } = context
+  return (typeof value === "function" ? value(bonestructure, { form, mainForm }) : value) ?? {}
+}
+
 export function useRelationalSource(boneState, formatString) {
+  const injected = hasInjectionContext()
+  const relationParams = injected ? inject("relationParams", null) : null
+  const context = {
+    form: injected ? inject("formState", null) : null,
+    mainForm: injected ? inject("mainformState", null) : null,
+  }
   let latest = null
 
   async function fetchItems(search) {
     const { type, module, format } = boneState.bonestructure
-    const params = { limit: 99 }
+    // the form's params first: limit, skelType and the search filter stay ours
+    const params = { ...resolveRelationParams(relationParams, boneState.bonestructure, context), limit: 99 }
     if (type.startsWith("relational.tree.leaf")) params.skelType = "leaf"
     else if (type.startsWith("relational.tree.node")) params.skelType = "node"
     if (search) params.search = search

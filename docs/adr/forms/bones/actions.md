@@ -40,6 +40,9 @@ Visibility: `ViForm` `boneactions=false` (default) shows only actions with
 `required: true`; `true` shows all. A host can provide
 `viurRelationSelector` (`(request) => Promise<Row[]|null>`); it reaches
 `ctx.relationSelector`, so an own action gates on it with `when`.
+`ctx.relationParams` holds the form's `relationParams` for this bone; a
+selection dialog passes them on (e.g. `ViurBrowser` `params`), like the
+relational suggestions do.
 
 ## Rules
 

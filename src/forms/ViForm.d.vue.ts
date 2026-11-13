@@ -40,6 +40,8 @@ export interface ViFormProps {
   readonly?: boolean
   /** With `bones`: send only those bones (plus key) instead of every writable bone. */
   sendOnlyShownBones?: boolean
+  /** Send without the browser's validity check (e.g. empty required bones); confirming is up to the project. */
+  novalidate?: boolean
   /**
    * Layout component that places the bones (default: LayoutCategory). It renders
    * its default slot once per bone with `{ boneName, widget, visible?, label? }`.

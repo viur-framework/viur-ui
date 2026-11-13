@@ -266,7 +266,7 @@ export function useFormUtils(props, state) {
   function sendData(alternativUrl = null, additionalData = null, headers = null, removeKeyFromDataset = true) {
     state.loading = true
     // No <form> element in list mode — nothing to validate.
-    let isValid = state.viformelement ? state.viformelement.reportValidity() : true
+    let isValid = state.viformelement && !props.novalidate ? state.viformelement.reportValidity() : true
     if (!isValid) {
       state.loading = false
       return new Promise((resolve, reject) => reject("Form is not valid"))

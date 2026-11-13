@@ -39,6 +39,9 @@ defaults are overridden with the `values` prop. Rendering of single bones is
   bone made readonly by `readonlyIf` disappears from the request too.
 - `fetchData` renders the form with POST, not GET. ViUR answers a POST
   without skey with the form, so a custom action must accept POST to render.
+- `sendData` refuses to send while the `<form>` fails `reportValidity()`
+  (empty required bones, pattern, min/max). `novalidate` skips that check;
+  the server still validates, and a confirmation dialog is up to the project.
 - `sendData` drops the `key` field from the body by default
   (`removeKeyFromDataset`); the key travels in the URL.
 - `null`/`undefined` are sent as `""`, an empty multiple as one empty field.

@@ -158,6 +158,22 @@ describe("multi-step form flow", () => {
     expect(fetchResult.data.value.status).toBe("success")
   })
 
+  // #28: novalidate sends even if the browser reports e.g. an empty required bone
+  it.each([
+    [false, 0],
+    [true, 1],
+  ])("sendData with novalidate=%s sends an invalid form %i time(s)", async (novalidate, calls) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ ...STEP1, errors: [] })))
+    const state = makeState()
+    state.structure = { name: { type: "str", visible: true } }
+    state.viformelement = { reportValidity: () => false }
+
+    const { sendData } = useFormUtils(makeProps({ novalidate }), state)
+    await sendData("/json/v2/user/edit").catch(() => {})
+
+    expect(fetch).toHaveBeenCalledTimes(calls)
+  })
+
   it("loadStep passes through query params carried on the step url", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(STEP1))
     vi.stubGlobal("fetch", fetchMock)

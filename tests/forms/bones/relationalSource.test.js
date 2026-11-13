@@ -68,20 +68,16 @@ describe("useRelationalSource", () => {
     ])
     expect(urls).toHaveLength(1)
     expect(urls[0].get("limit")).toBe("99")
-    expect([...urls[0].keys()].some((key) => key.endsWith("$lk"))).toBe(false)
+    expect(urls[0].has("search")).toBe(false)
   })
 
-  it("sends the search as a prefix filter on the first bone of the format", async () => {
+  it("sends the search to the fulltext search, independent of the format", async () => {
     const urls = stubFetch(() => page("Entry"))
     const getList = useRelationalSource(boneState("$(dest.firstname) $(dest.lastname)"), formatString)
-    expect((await settle(getList(" Ent "))).map((item) => item.value)).toEqual(["Entry"])
-    expect(urls[0].get("firstname$lk")).toBe("Ent")
+    expect((await settle(getList(" Max Mus "))).map((item) => item.value)).toEqual(["Entry"])
+    expect(urls).toHaveLength(1)
+    expect(urls[0].get("search")).toBe("Max Mus")
     expect(urls[0].get("limit")).toBe("99")
-  })
-
-  it("does not filter when the format names no bone", async () => {
-    const urls = stubFetch()
-    await settle(useRelationalSource(boneState("static"), formatString)("Ent"))
     expect([...urls[0].keys()].some((key) => key.endsWith("$lk"))).toBe(false)
   })
 
@@ -101,7 +97,7 @@ describe("useRelationalSource", () => {
   it("an outdated slower response resolves with the newest result", async () => {
     let releaseOld
     const oldResponse = new Promise((resolve) => (releaseOld = resolve))
-    stubFetch((params) => (params.get("name$lk") === "a" ? oldResponse : page("ab")))
+    stubFetch((params) => (params.get("search") === "a" ? oldResponse : page("ab")))
     const getList = useRelationalSource(boneState(), formatString)
     const old = getList("a")
     await vi.advanceTimersByTimeAsync(300) // request for "a" is out, its response hangs
@@ -112,7 +108,7 @@ describe("useRelationalSource", () => {
   })
 
   it("debounces keystrokes into one request; every call gets its result", async () => {
-    const urls = stubFetch((params) => page(params.get("name$lk")))
+    const urls = stubFetch((params) => page(params.get("search")))
     const getList = useRelationalSource(boneState(), formatString)
     const calls = [getList("a"), getList("ab"), getList("abc")]
     await vi.advanceTimersByTimeAsync(300)

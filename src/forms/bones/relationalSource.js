@@ -4,10 +4,9 @@ import { useListFetch } from "../../request/index.js"
 /**
  * `source` for the relational selection widgets (e.g. `<wa-combobox :source>`).
  *
- * Fetches one page (ViUR maximum 99). The search text becomes a server-side
- * prefix filter on the first bone of the bone's `format`
- * (`$(dest.name)` -> `name$lk`, ViUR's StringBone prefix match — no fulltext
- * adapter needed). Without such a bone the search is not applied.
+ * Fetches one page (ViUR maximum 99). The search text goes to ViUR's fulltext
+ * search (`search=`, like ViurDataTable): the target module decides via
+ * `searchable=True` on its bones which fields are found.
  * The combobox calls `source` on every keystroke: requests are debounced, and
  * a superseded call (cancelled by the debounce or answered late) resolves with
  * the newest result, so it can't overwrite it.
@@ -35,9 +34,7 @@ export function useRelationalSource(boneState, formatString) {
     const params = { limit: 99 }
     if (type.startsWith("relational.tree.leaf")) params.skelType = "leaf"
     else if (type.startsWith("relational.tree.node")) params.skelType = "node"
-    // ponytail: only the first bone of the format is searched, e.g. not the lastname in "$(dest.firstname) $(dest.lastname)"
-    const searchBone = /\$\(dest\.(\w+)/.exec(format ?? "")?.[1]
-    if (search && searchBone) params[`${searchBone}$lk`] = search
+    if (search) params.search = search
 
     const listFetch = useListFetch(module, {
       immediate: false,

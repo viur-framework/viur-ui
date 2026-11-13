@@ -101,11 +101,10 @@ describe("server errors", () => {
 
 const { default: PasswordBone } = await import("../../../src/forms/bones/widgets/passwordBone.vue")
 
-/** Types `value` into a wa-input like the browser does (input updates v-model, keyup reports). */
+/** Sets `value` like typing, pasting or autofill do: only an `input` event, no `keyup`. */
 function type(input, value) {
   input.value = value
   input.dispatchEvent(new Event("input"))
-  input.dispatchEvent(new Event("keyup"))
 }
 
 describe("passwordBone", () => {
@@ -275,5 +274,25 @@ describe("stringBone pattern", () => {
     input.value = "123"
     input.dispatchEvent(new Event("change"))
     expect(message).toBe("Invalid ZIP code")
+  })
+})
+
+const { default: EmailBone } = await import("../../../src/forms/bones/widgets/emailBone.vue")
+
+describe("input without keyup", () => {
+  // Pasting with the mouse, autofill or Playwright's fill() fire no keyup. A value only
+  // in the wa-input is lost when a nested form re-renders before the field fires change.
+  it.each([
+    ["numericBone", NumericBone, "42"],
+    ["stringBone", StringBone, "text"],
+    ["emailBone", EmailBone, "a@b.de"],
+  ])("%s reports the value", (_, component, value) => {
+    const { el, changes } = mountWidget(component, { value: "" }, {})
+    const input = el.querySelector("wa-input")
+    input.reportValidity = () => true
+    input.validity = {}
+    input.setCustomValidity = () => {}
+    type(input, value)
+    expect(changes.at(-1)[1]).toBe(value)
   })
 })

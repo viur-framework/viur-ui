@@ -15,7 +15,7 @@
     :maxlength="boneState.maxlength"
     :minlength="boneState.minlength"
     @change="changeEvent"
-    @keyup="changeEvent"
+    @input="changeEvent"
   ></wa-input>
 </template>
 
@@ -107,7 +107,7 @@ function byCountry(param) {
 }
 
 /**
- * Handles `change` and `keyup` events of the `<wa-input>`.
+ * Handles `change` and `input` events of the `<wa-input>`.
  * Checks the native validity, sets a custom error message on
  * `patternMismatch` and emits the `change` event with the validation status.
  *

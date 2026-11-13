@@ -15,7 +15,7 @@
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @change="changeEvent"
       @wa-clear="state.value1 = ''"
-      @keyup="changeEvent"
+      @input="changeEvent"
     >
       <wa-icon
         v-if="state.needsConfirm"
@@ -36,7 +36,7 @@
       :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
       @change="changeEvent"
       @wa-clear="state.value2 = ''"
-      @keyup="changeEvent"
+      @input="changeEvent"
     >
       <wa-icon
         slot="end"

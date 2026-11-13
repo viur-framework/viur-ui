@@ -61,8 +61,11 @@ export class HTTPError extends Error {
  * unversioned endpoint (e.g. `/json/…`), which the server aliases to the newest
  * wire format (envelope v2). Pass `2`/`"v2"` or `1`/`"v1"` to pin a version
  * (`/json/v2/…`, `/json/v1/…`). A numeric version is rendered as `v<n>`.
+ *
+ * `args` are path segments after the endpoint (e.g. a key or the tree
+ * `skelType`): `"<key>"`, `"/node/<key>"` or `["node", key]`. `"/"` adds none.
  */
-function create_url({ controller, endpoint, renderer = "json", version = null, lang = null } = {}) {
+function create_url({ controller, endpoint, renderer = "json", version = null, lang = null, args = null } = {}) {
   if (!controller) {
     throw new Error("Parameter 'controller' is required")
   }
@@ -86,6 +89,11 @@ function create_url({ controller, endpoint, renderer = "json", version = null, l
   }
 
   url += `/${endpoint}`
+
+  const argSegments = (Array.isArray(args) ? args : String(args ?? "").split("/")).filter(
+    (segment) => segment !== "" && segment != null
+  )
+  for (const segment of argSegments) url += `/${encodeURIComponent(segment)}`
 
   if (url && !(url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//"))) {
     url = (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : window.location.origin) + url
@@ -547,6 +555,12 @@ export function createControllerFetch({
   invalidatesAll = false,
 } = {}) {
   return (controller, args = "/", data = {}, ctx = {}) => {
+    // args are path segments; a data object here would end up as "/[object Object]"
+    if (args != null && !["string", "number"].includes(typeof args) && !Array.isArray(args)) {
+      throw new TypeError(
+        `[request] ${endpoint}: args must be a path ("<key>", ["node", key], "/" for none); data goes into the 3rd argument`
+      )
+    }
     const renderer = ctx.renderer ?? import.meta.env.VITE_DEFAULT_RENDERER ?? "json"
     const {
       version = null,
@@ -583,7 +597,7 @@ export function createControllerFetch({
           } catch (error) {
             throw error
           }
-          const base = create_url({ controller, endpoint, renderer, version, lang })
+          const base = create_url({ controller, endpoint, renderer, version, lang, args })
           const extraQs = query ? toSearchParams(query).toString() : ""
 
           options.method = method

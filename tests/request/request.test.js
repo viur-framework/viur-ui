@@ -617,6 +617,28 @@ describe("useViewFetch", () => {
     expect(url).toContain("key=v1")
   })
 
+  it("appends args as path segments after the endpoint (GET and POST)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ values: { key: "a1" } }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    await waitUntilFinished(useViewFetch("items", "/node/a1", { x: "1" }))
+    expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/json/items/view/node/a1?x=1`)
+
+    await waitUntilFinished(useViewFetch("items", "/", {}))
+    expect(fetchMock.mock.calls[1][0]).toBe(`${BASE}/json/items/view`)
+
+    fetchMock.mockClear()
+    const post = createControllerFetch({ endpoint: "edit", method: "POST" })
+    await waitUntilFinished(post("items", ["leaf", "a/b"], {}))
+    expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/json/items/edit/leaf/a%2Fb`)
+  })
+
+  it("throws when args is a data object instead of a path", () => {
+    vi.stubGlobal("fetch", vi.fn())
+    expect(() => useViewFetch("items", { key: "a1" })).toThrow(TypeError)
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
   it("cached: true returns cache hit without re-fetching", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ values: { key: "cv1" } }))
     vi.stubGlobal("fetch", fetchMock)

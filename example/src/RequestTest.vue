@@ -16,7 +16,7 @@ const viewFetching = ref(false)
 const viewFinished = ref(false)
 
 function runView() {
-  viewInstance = useViewFetch("user", { key: viewKey.value })
+  viewInstance = useViewFetch("user", "/", { key: viewKey.value })
   viewData.value = viewInstance.data
   viewFetching.value = viewInstance.isFetching
   viewFinished.value = viewInstance.isFinished
@@ -29,7 +29,7 @@ let addInstance = null
 const addData = ref(null)
 
 function runAdd() {
-  addInstance = useAddFetch("user", { name: addName.value, email: addEmail.value })
+  addInstance = useAddFetch("user", "/", { name: addName.value, email: addEmail.value })
   addData.value = addInstance.data
 }
 
@@ -40,7 +40,7 @@ let editInstance = null
 const editData = ref(null)
 
 function runEdit() {
-  editInstance = useEditFetch("user", { key: editKey.value, name: editName.value })
+  editInstance = useEditFetch("user", "/", { key: editKey.value, name: editName.value })
   editData.value = editInstance.data
 }
 
@@ -50,7 +50,7 @@ let deleteInstance = null
 const deleteData = ref(null)
 
 function runDelete() {
-  deleteInstance = useDeleteFetch("user", { key: deleteKey.value })
+  deleteInstance = useDeleteFetch("user", "/", { key: deleteKey.value })
   deleteData.value = deleteInstance.data
 }
 </script>

@@ -1,12 +1,5 @@
-wa-input,
-wa-textarea,
-wa-select,
-wa-combobox,
-wa-checkbox,
-wa-switch,
-wa-radio-group,
-wa-date-picker,
-wa-color-picker {
+/* Bones render their own required star (bone-label-required) - only there. */
+.bone :is(wa-input, wa-textarea, wa-select, wa-combobox, wa-checkbox, wa-switch, wa-radio-group, wa-date-picker, wa-color-picker) {
   --wa-form-control-required-content: "";
 }
 

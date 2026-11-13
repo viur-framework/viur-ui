@@ -10,11 +10,6 @@
     v-else
     class="form"
   >
-    <wa-spinner
-      v-if="state.updating"
-      style="position: absolute; top: 20px; left: -10px"
-    ></wa-spinner>
-
     <vi-form
       ref="skelRef"
       :internal="mainformState"
@@ -42,7 +37,6 @@ import {
   inject,
   computed,
   getCurrentInstance,
-  watch,
   ref,
   provide,
   unref,
@@ -50,7 +44,6 @@ import {
 } from "vue"
 import { getBoneWidget } from "./index.js"
 import ViForm from "../ViForm.vue"
-import { useTimeoutFn } from "@vueuse/core"
 
 const emit = defineEmits(["change"])
 const props = defineProps({
@@ -98,27 +91,15 @@ const state = reactive({
     }
     return val.length - 1 === props.index
   }),
-  updating: false,
 })
 
 function changeEvent(val) {
-  state.updating = true
   val["value"] = skelRef.value.state.skel // send whole form
   val["name"] = props.name
   val["index"] = props.index
   val["lang"] = props.lang
   emit("change", val)
-  useTimeoutFn(() => {
-    state.updating = false
-  }, 1000)
 }
-
-watch(
-  () => props.value,
-  (newVal, oldVal) => {
-    state.updating = false
-  }
-)
 
 onMounted(() => {
   let app = getCurrentInstance().appContext

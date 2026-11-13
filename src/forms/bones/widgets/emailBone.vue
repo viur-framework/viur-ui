@@ -13,7 +13,7 @@
     :placeholder="state.placeholder"
     :data-user-invalid="boneState.errorMessages.length === 0 ? undefined : true"
     @change="changeEvent"
-    @keyup="changeEvent"
+    @input="changeEvent"
   ></wa-input>
 </template>
 

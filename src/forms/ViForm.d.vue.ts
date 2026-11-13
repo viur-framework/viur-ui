@@ -107,6 +107,8 @@ export interface ViFormApi {
     headers?: Record<string, string> | null,
     removeKeyFromDataset?: boolean
   ) => Promise<unknown>
+  /** Emit the pending (debounced) `change` at once, e.g. before an app saves `state.skel` itself. */
+  flush: () => void
   /** (Re)fetch the form from the server. */
   fetchData: (
     alternativeUrl?: string | null,

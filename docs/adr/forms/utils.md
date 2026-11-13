@@ -12,8 +12,8 @@ A host uses `ViForm` (registered by `installViurForms(app)`), not
   `renderer`). The URL is built from these and hits the native ViUR route.
 - local: `structure` + `skel`, no request on render.
 
-Hooks on the instance (`defineExpose`): `sendData`, `fetchData`, `loadStep`,
-`submitStep`, `back`, `reload`, `resetForm`, `updateSkel`, `state`. Extra
+Hooks on the instance (`defineExpose`): `sendData`, `flush`, `fetchData`,
+`loadStep`, `submitStep`, `back`, `reload`, `resetForm`, `updateSkel`, `state`. Extra
 POST fields (contexts) go in as `additionalData` of `sendData`; server
 defaults are overridden with the `values` prop. Rendering of single bones is
 `docs/adr/forms/bones.md`.

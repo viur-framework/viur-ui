@@ -509,7 +509,9 @@ watch(
   () => {
     if (JSON.stringify(props.skel ?? null) === JSON.stringify(state.skel)) return
     // structure wont be updated, cause of logic changes on structures
-    initForm(props.skel)
+    // `values` overrides server defaults on load only. Laid over every skel update it
+    // would reset a field the user already edited once the caller writes it back.
+    initForm(props.skel, undefined, null)
     //rerun logics after dragging
     logics()
   },

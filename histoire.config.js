@@ -96,6 +96,11 @@ export default defineConfig({
   plugins: [HstVue()],
   setupFile: "./stories/setup.js",
   storyMatch: ["stories/bones/**/*.story.vue"],
+  // histoire watches the whole root for *.story.md and only skips what matches these patterns (micromatch
+  // on absolute paths). Its default `**/node_modules/**` misses pnpm's node_modules/.pnpm and every path
+  // below a dot folder (.worktrees/…), because `**` does not cross dot segments. Then the watcher opens
+  // one handle per package folder: EMFILE on macOS. Absolute patterns keep a dot in the root literal.
+  storyIgnored: ["**/node_modules", "**/.*", "**/dist"].map((pattern) => path.join(__dirname, pattern)),
   vite: {
     publicDir: "stories/public",
     plugins: [

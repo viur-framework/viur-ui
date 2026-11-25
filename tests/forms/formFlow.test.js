@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import { reactive, isProxy } from "vue"
-import { useFormUtils } from "../../src/forms/utils.js"
+import { useFormUtils, isRenderedStep } from "../../src/forms/utils.js"
 
 // Drives the multi-step / list form flow (ViForm gaps 1–3) through the REAL
 // request layer with a mocked global fetch, asserting how the envelope is
@@ -317,6 +317,143 @@ describe("multi-step form flow", () => {
     await sendData(state.postUrl)
 
     expect(state.errors[0].fieldPath).toEqual(["password"])
+  })
+})
+
+// A three-step action like deploy/modules/feedback.py: compose → contact →
+// confirm → submit. The server may answer an accepted step in two ways, and
+// both may appear in the same run (advanceStep).
+describe("multi-step: intermediate step and directly rendered step", () => {
+  const BASE = "/json/v2/feedback"
+  const STEPS = {
+    compose: { icon: "pencil", icon_library: "default", label: "Verfassen", url: `${BASE}/compose` },
+    contact: { icon: "person", icon_library: "default", label: "Kontakt", url: `${BASE}/contact` },
+    confirm: { icon: "check-circle", icon_library: "default", label: "Bestätigen", url: `${BASE}/confirm` },
+  }
+  const STRUCTURES = {
+    compose: { message: { type: "str", visible: true } },
+    contact: { email: { type: "str.email", visible: true } },
+    confirm: { message: { type: "str", visible: true, readonly: true } },
+  }
+  function envelope(status, step, stepStatus, follow, { form = true, errors = [], data = {} } = {}) {
+    return {
+      version: 2,
+      action: "feedback",
+      status,
+      step,
+      step_status: stepStatus,
+      steps: STEPS,
+      follow,
+      datatype: "entity",
+      module: "feedback",
+      structure: form ? STRUCTURES[step] : null,
+      data: form ? data : null,
+      errors,
+    }
+  }
+
+  // Answers by "METHOD path"; records the order of all non-skey requests.
+  function serve(routes) {
+    const calls = []
+    const fetchMock = vi.fn().mockImplementation(async (url, options) => {
+      if (String(url).includes("/skey")) return jsonResponse(["sk1", "sk2", "sk3", "sk4", "sk5"])
+      const method = (options?.method ?? "GET").toUpperCase()
+      const route = `${method} ${new URL(String(url)).pathname}`
+      calls.push(route)
+      const answers = routes[route]
+      if (!answers?.length) throw new Error(`unexpected request ${route}`)
+      return jsonResponse(answers.shift())
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    return calls
+  }
+
+  it("recognizes a directly rendered step only by continue + step_status init + structure", () => {
+    expect(isRenderedStep(envelope("continue", "contact", "init", `${BASE}/contact`))).toBe(true)
+    // accepted, next step not rendered yet → intermediate step
+    expect(isRenderedStep(envelope("continue", "compose", "success", `${BASE}/contact`))).toBe(false)
+    expect(isRenderedStep(envelope("continue", "contact", "init", `${BASE}/contact`, { form: false }))).toBe(false)
+    expect(isRenderedStep(envelope("init", "compose", "init", `${BASE}/compose`))).toBe(false)
+    expect(isRenderedStep(null)).toBe(false)
+  })
+
+  it("init → rejected → continue (GET) → continue (rendered) → success", async () => {
+    const calls = serve({
+      [`GET ${BASE}/compose`]: [envelope("init", "compose", "init", `${BASE}/compose`)],
+      [`POST ${BASE}/compose`]: [
+        envelope("rejected", "compose", "rejected", `${BASE}/compose`, {
+          errors: [{ severity: 2, fieldPath: ["message"], errorMessage: "fehlt" }],
+        }),
+        // intermediate step: accepted, the client fetches `contact` itself
+        envelope("continue", "compose", "success", `${BASE}/contact`, { form: false }),
+      ],
+      [`GET ${BASE}/contact`]: [envelope("init", "contact", "init", `${BASE}/contact`)],
+      // directly rendered: the answer IS the confirm step, its form posts to submit
+      [`POST ${BASE}/contact`]: [
+        envelope("continue", "confirm", "init", `${BASE}/submit`, { data: { message: "Hallo" } }),
+      ],
+      [`POST ${BASE}/submit`]: [envelope("success", "confirm", "success", null, { form: false })],
+    })
+
+    const state = makeState()
+    const props = makeProps({ module: "feedback", action: "compose", renderer: "json/v2" })
+    const { loadStep, sendData, advanceStep } = useFormUtils(props, state)
+    async function submit() {
+      const fetchResult = await sendData(state.postUrl)
+      return advanceStep(fetchResult?.data?.value)
+    }
+
+    await loadStep(`${BASE}/compose`)
+    expect(state.step).toBe("compose")
+    expect(state.postUrl).toBe(`${BASE}/compose`)
+
+    // rejected: stays on the step, no further request
+    expect(await submit()).toBe(null)
+    expect(state.step).toBe("compose")
+    expect(state.errors[0].fieldPath).toEqual(["message"])
+    expect(state.postUrl).toBe(`${BASE}/compose`)
+
+    // intermediate step: GET follow renders contact
+    expect(await submit()).toBe("loaded")
+    expect(state.step).toBe("contact")
+    expect(Object.keys(state.structure)).toEqual(["email"])
+    expect(state.postUrl).toBe(`${BASE}/contact`)
+
+    // directly rendered: confirm is shown without a GET
+    expect(await submit()).toBe("rendered")
+    expect(state.step).toBe("confirm")
+    expect(Object.keys(state.structure)).toEqual(["message"])
+    expect(state.skel.message).toBe("Hallo")
+    expect(state.postUrl).toBe(`${BASE}/submit`)
+
+    expect(await submit()).toBe("success")
+    expect(state.status).toBe("success")
+
+    expect(calls).toEqual([
+      `GET ${BASE}/compose`,
+      `POST ${BASE}/compose`,
+      `POST ${BASE}/compose`,
+      `GET ${BASE}/contact`,
+      `POST ${BASE}/contact`,
+      `POST ${BASE}/submit`,
+    ])
+  })
+
+  it("prefills a directly rendered step from the values prop, like a GET-rendered one", async () => {
+    serve({
+      [`POST ${BASE}/compose`]: [envelope("continue", "contact", "init", `${BASE}/contact`, { data: { email: "" } })],
+    })
+    const state = makeState()
+    state.values = { email: "vorbelegt@example.com" }
+    state.structure = STRUCTURES.compose
+    state.skel = { message: "Hallo" }
+    state.postUrl = `${BASE}/compose`
+
+    const { sendData, advanceStep } = useFormUtils(makeProps({ module: "feedback", renderer: "json/v2" }), state)
+    const fetchResult = await sendData(state.postUrl)
+
+    expect(await advanceStep(fetchResult.data.value)).toBe("rendered")
+    expect(state.skel.email).toBe("vorbelegt@example.com")
   })
 })
 

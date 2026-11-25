@@ -1,4 +1,4 @@
-import { createControllerFetch, normalizeEnvelope, normalizeStructure } from "../request/index.js"
+import { createControllerFetch, normalizeEnvelope, normalizeStructure, v1SelectionFollow } from "../request/index.js"
 import Logics from "logics-js"
 import { inject, toRaw, reactive, markRaw } from "vue"
 import Utils from "./bones/utils.js"
@@ -16,6 +16,15 @@ function rawCopy(value) {
     return Object.fromEntries(Object.entries(raw).map(([key, entry]) => [key, rawCopy(entry)]))
   }
   return raw
+}
+
+/**
+ * Does the answer to a POST already carry the next step, freshly rendered?
+ * `continue` + `step_status: "init"` + a structure. Without that, a `continue`
+ * means "accepted, fetch the next step from `follow`".
+ */
+export function isRenderedStep(data) {
+  return data?.["status"] === "continue" && data?.["step_status"] === "init" && data?.["structure"] != null
 }
 
 export function useFormUtils(props, state) {
@@ -175,6 +184,32 @@ export function useFormUtils(props, state) {
     const url = prev && (prev.url || prev.endpoint)
     if (!url) return
     return loadStep(url)
+  }
+
+  // Advance a multi-step flow after the answer to a POST. Two forms are valid,
+  // the server picks per answer:
+  // - `continue` + `step_status: "success"`: the step was accepted, the next one
+  //   is not rendered yet → GET `follow` (the intermediate step, default).
+  // - `continue` + `step_status: "init"` + `structure`: the answer already IS
+  //   the next step, freshly rendered → show it, no GET; the next POST goes to
+  //   its `follow`.
+  // Returns "success", "rendered", "loaded" or null (stay on the step).
+  async function advanceStep(data) {
+    if (data?.["status"] === "success") return "success"
+    if (data?.["status"] === "rejected") return null
+    if (isRenderedStep(data)) {
+      // sendData applied the answer as a submit echo; apply it again as a
+      // rendered step so the `values` prop prefills it like loadStep does.
+      applyResponseState(data, { updateStructure: true, presetValues: true })
+      return "rendered"
+    }
+    // v2 delivers the next step's target as `follow`. The classic v1 login
+    // chain doesn't have that — there the target is the selected value (the
+    // provider selection lists URLs).
+    const follow = data?.["follow"] ?? v1SelectionFollow(data)
+    if (!follow) return null
+    await loadStep(follow)
+    return "loaded"
   }
 
   function toFormData() {
@@ -613,6 +648,7 @@ export function useFormUtils(props, state) {
     fetchData,
     sendData,
     loadStep,
+    advanceStep,
     resetForm,
     back,
     buildRequestUrl: () => {

@@ -148,7 +148,6 @@
 <script setup>
 import { useI18n } from "vue-i18n"
 import { useFormUtils } from "./utils.js"
-import { v1SelectionFollow } from "../request/index.js"
 import { reactive, watch, onBeforeMount, computed, provide, inject, ref, unref } from "vue"
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
@@ -460,6 +459,7 @@ const {
   fetchData,
   sendData: sendDataNow,
   loadStep,
+  advanceStep,
   resetForm,
   back,
   updateSkel,
@@ -557,7 +557,8 @@ provide("formUpdate", formUpdate)
 // Multi-step driver: POST the current step to its `follow` URL, then advance.
 // - rejected → stay on the step (errors were already applied by sendData)
 // - success  → emit("success")
-// - continue → GET the next step's `follow` and render it
+// - continue → GET the next step's `follow` and render it, or show the next
+//   step right away when the answer already carries it (see advanceStep)
 async function submitStep() {
   if (state.loading) return
   try {
@@ -565,14 +566,10 @@ async function submitStep() {
     // the normalized v2 envelope.
     const fetchResult = await sendData(state.postUrl)
     const data = fetchResult?.data?.value
-    // v2 delivers the next step's target as `follow`. The classic
-    // v1 login chain doesn't have that — there the target is the selected value
-    // (the provider selection lists URLs).
-    const follow = data?.["follow"] ?? v1SelectionFollow(data)
-    if (data?.["status"] === "success") {
+    const outcome = await advanceStep(data)
+    if (outcome === "success") {
       emit("success", data)
-    } else if (data?.["status"] !== "rejected" && follow) {
-      await loadStep(follow)
+    } else if (outcome) {
       emit("step-change", { step: state.step, steps: state.steps })
     }
     return data

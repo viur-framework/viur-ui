@@ -12,6 +12,8 @@ const GSI_SRC = "https://accounts.google.com/gsi/client"
 
 let _loadPromise = null
 let _initializedFor = null
+// the callback of the last initGoogle: GSI keeps the one of its initialize()
+let _onCredential = null
 
 /** Load the GSI client script once; resolves with window.google. */
 export function loadGoogleSdk() {
@@ -39,13 +41,14 @@ export function loadGoogleSdk() {
  *  failure) propagates to the caller, which handles it. */
 export async function initGoogle(clientId, onCredential) {
   const google = await loadGoogleSdk()
+  _onCredential = onCredential
   if (_initializedFor !== clientId) {
     google.accounts.id.initialize({
       client_id: clientId,
       ux_mode: "popup",
       cancel_on_tap_outside: false,
       callback: (response) => {
-        if (response?.credential) onCredential(response.credential)
+        if (response?.credential) _onCredential?.(response.credential)
       },
     })
     _initializedFor = clientId
@@ -54,9 +57,15 @@ export async function initGoogle(clientId, onCredential) {
 }
 
 /** Render the official Google button into `el`. */
-export async function renderGoogleButton(el, clientId, onCredential, { theme = "outline", size = "large" } = {}) {
+export async function renderGoogleButton(
+  el,
+  clientId,
+  onCredential,
+  { theme = "outline", size = "large", width = undefined } = {}
+) {
   const google = await initGoogle(clientId, onCredential)
-  if (el) google.accounts.id.renderButton(el, { theme, size })
+  // width in pixels, at most 400 (GSI)
+  if (el) google.accounts.id.renderButton(el, { theme, size, ...(width ? { width: Math.min(width, 400) } : {}) })
 }
 
 /** Trigger the One-Tap / popup prompt. */

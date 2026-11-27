@@ -46,12 +46,24 @@ function serverReason(ctx) {
 }
 
 export class HTTPError extends Error {
-  constructor(statusCode, statusText, message, response = null) {
+  /** `title` and `descr` are the ones of viur-core's JSON error body (e.g. "Not Acceptable" /
+   *  "Second factor required …"), null when the server sent none. */
+  constructor(statusCode, statusText, message, response = null, { title = null, descr = null } = {}) {
     super(message || statusText)
     this.statusCode = statusCode
     this.statusText = statusText
     this.response = response
+    this.title = title
+    this.descr = descr
   }
+}
+
+/** HTTPError of a failed request, with the reason viur-core gave in its error body. */
+function requestError(ctx) {
+  return new HTTPError(ctx.response?.status, ctx.response?.statusText, serverReason(ctx), ctx.response, {
+    title: ctx.data?.["title"] || null,
+    descr: ctx.data?.["descr"] || viurErrorHeader(ctx.response) || null,
+  })
 }
 
 /**
@@ -296,7 +308,7 @@ function createControllerListFetch({ all = false, secure = false } = {}) {
           if (ctx.context.generation !== _generation || ctx.error?.name === "AbortError") {
             return { ...ctx, error: error.value }
           }
-          ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, serverReason(ctx), ctx.response)
+          ctx.error = requestError(ctx)
           if (messages) {
             notify(
               requestMessage({ method: "GET", endpoint: "list", module: controllerPath(controller), error: ctx.error })
@@ -648,7 +660,7 @@ export function createControllerFetch({
           return { url: postUrl, options }
         },
         onFetchError(ctx) {
-          ctx.error = new HTTPError(ctx.response?.status, ctx.response?.statusText, serverReason(ctx), ctx.response)
+          ctx.error = requestError(ctx)
           if (messages) {
             notify(requestMessage({ method, endpoint, module: controllerPath(controller), error: ctx.error }))
           }
@@ -784,7 +796,10 @@ async function uploadError(step, response) {
   const body = await response.json().catch(() => null)
   const descr = body?.["descr"] || viurErrorHeader(response)
   const message = `${step} failed: ${response.status}${descr ? ` - ${descr}` : ""}`
-  return new HTTPError(response.status, response.statusText, message, response)
+  return new HTTPError(response.status, response.statusText, message, response, {
+    title: body?.["title"] || null,
+    descr: descr || null,
+  })
 }
 
 function _absolute(url) {

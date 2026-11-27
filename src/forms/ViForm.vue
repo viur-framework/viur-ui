@@ -106,6 +106,19 @@
     </slot>
   </form>
 
+  <!-- A failed request (e.g. a 406 of the login): status, title and description
+       of viur-core's error body. Shown with `showError`; the `error` slot
+       replaces it and always gets the error. -->
+  <slot
+    name="error"
+    :error="state.failed"
+  >
+    <RequestError
+      v-if="showError"
+      :error="state.failed"
+    />
+  </slot>
+
   <!-- Footer / action bar for the multi-step flow. Override via the `actions`
        slot; slot props expose the `next` (submit/advance) and `back` actions
        plus flow state. The default is a Back / Next|Submit bar. -->
@@ -152,6 +165,7 @@ import { reactive, watch, onBeforeMount, computed, provide, inject, ref, unref }
 import { useDebounceFn } from "@vueuse/core"
 import LayoutCategory from "./layouts/LayoutCategory.vue"
 import Bone from "./bones/Bone.vue"
+import RequestError from "../components/RequestError/RequestError.vue"
 
 // The template has several root nodes (steps, list, form, actions), so Vue would
 // drop attributes like `class` passed to <vi-form>. Forward them to the <form>.
@@ -188,6 +202,11 @@ const props = defineProps({
   useMessageStore: {
     type: Boolean,
     default: true,
+  },
+  // show a failed request (status, title, description) above the actions
+  showError: {
+    type: Boolean,
+    default: false,
   },
   //the above fields are needed for normal form.
 
@@ -296,7 +315,9 @@ const props = defineProps({
   },
   layout: {
     type: Object,
-    default: LayoutCategory,
+    // a factory: LayoutCategory may still be loading when an import cycle
+    // (layout → bones → nested form → ViForm) reaches this module first
+    default: () => LayoutCategory,
   },
   label: {
     type: String,
@@ -561,12 +582,18 @@ provide("formUpdate", formUpdate)
 // - success  → emit("success")
 // - continue → GET the next step's `follow` and render it, or show the next
 //   step right away when the answer already carries it (see advanceStep)
-async function submitStep() {
+// A layout may submit other data than the bones of the step (a passkey
+// assertion, a Google token): `{ url, data }` posts only `data`, to `url`
+// (default: the step's `follow`). A click passes its event: the plain submit.
+async function submitStep(options = null) {
   if (state.loading) return
+  const custom = options && !(options instanceof Event) ? options : null
   try {
     // sendData returns the request-layer fetch result; its `.data.value` holds
     // the normalized v2 envelope.
-    const fetchResult = await sendData(state.postUrl)
+    const fetchResult = custom
+      ? await sendData(custom.url ?? state.postUrl, custom.data ?? {}, null, true, { withForm: false })
+      : await sendData(state.postUrl)
     const data = fetchResult?.data?.value
     const outcome = await advanceStep(data)
     if (outcome === "success") {
@@ -581,6 +608,10 @@ async function submitStep() {
     return
   }
 }
+
+// a layout or widget may drive the steps itself: submit (e.g. a complete one-time
+// code, `{ url, data }` for data other than the bones) or load a step again
+provide("formActions", { submit: submitStep, loadStep })
 
 // flush: emit a pending change at once, e.g. before an app saves its copy of state.skel
 defineExpose({

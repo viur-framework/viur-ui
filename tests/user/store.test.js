@@ -141,6 +141,32 @@ describe("google sign-in", () => {
     expect(store.state.user.name).toBe("ada@example.com")
   })
 
+  it("posts the token to the configured endpoint (viur-core 4: google/one_tap)", async () => {
+    let loggedIn = false
+    const fetchMock = vi.fn().mockImplementation(async (url, opts) => {
+      const method = (opts?.method || "GET").toUpperCase()
+      if (url.includes("/skey")) return jsonResponse(["sk1"])
+      if (url.includes("/user/view/self"))
+        return loggedIn
+          ? jsonResponse({ version: 2, status: "success", data: USER, errors: [] })
+          : jsonResponse({}, 401)
+      if (url.includes("/json/user/google/one_tap") && method === "POST") {
+        loggedIn = true
+        return jsonResponse({ version: 2, action: "login_success", status: "success", data: {}, errors: [] })
+      }
+      return jsonResponse({}, 404)
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    const store = useUserStore()
+    store.configure({ googleLoginEndpoint: "google/one_tap" })
+
+    const body = await store.loginWithGoogle("id-token")
+
+    expect(body.status).toBe("success")
+    expect(store.isLoggedIn).toBe(true)
+    expect(fetchMock.mock.calls.some(([url]) => url.includes("/auth_googleaccount/"))).toBe(false)
+  })
+
   it("returns a follow for a second-factor handoff without logging in", async () => {
     vi.stubGlobal(
       "fetch",

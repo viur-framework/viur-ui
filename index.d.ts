@@ -191,6 +191,10 @@ export interface ConfigStore {
   isAdminLoaded: boolean
   googleClientId: string | null
   hasGoogleLogin: boolean
+  /** viur-core 4: the password login allows the self-registration ("admin.user.registration"). */
+  registrationEnabled: boolean
+  /** viur-core 4: signed-in users may add second factors ("admin.user.second_factor_setup"). */
+  secondFactorSetupEnabled: boolean
   language: string | null
   languages: string[]
   moduleNames: string[]
@@ -313,7 +317,17 @@ export declare class HTTPError extends Error {
   statusCode: number
   statusText: string
   response: Response | null
-  constructor(statusCode: number, statusText: string, message?: string, response?: Response | null)
+  /** Title of viur-core's JSON error body ("Not Acceptable"), null without one. */
+  title: string | null
+  /** Description of viur-core's JSON error body (or the x-viur-error header), null without one. */
+  descr: string | null
+  constructor(
+    statusCode: number,
+    statusText: string,
+    message?: string,
+    response?: Response | null,
+    details?: { title?: string | null; descr?: string | null }
+  )
 }
 
 // ─── Skel Utilities ───────────────────────────────────────────────────────────
@@ -350,6 +364,76 @@ export declare function skelDataToFormData(
   skel: Record<string, any>,
   structure: Record<string, any>
 ): { [field: string]: any }[]
+
+// ─── Request errors ───────────────────────────────────────────────────────────
+
+/** Shows a failed request: "<status> <title>" and the `descr` of viur-core's error body. */
+export { default as RequestError } from "./src/components/RequestError/RequestError.d.vue"
+
+// ─── Login method (viur-core 4) ───────────────────────────────────────────────
+
+/**
+ * ViForm layout of the login: the choice of the method (Google as One Tap), the passkey ceremony, user name and
+ * password with the other methods below; every other step as the default layout.
+ */
+export declare const LoginLayout: import("vue").DefineComponent<{}, {}, any>
+
+/**
+ * ViForm layout of a step with a one-time code of a second factor (`otptoken`): the code as OtpBone, every other
+ * bone by default. A complete code submits the step.
+ */
+export declare const OtpLayout: import("vue").DefineComponent<{}, {}, any>
+
+/** Bone widget for a one-time code (`wa-otp-input`): 6 digits, or a recovery code `XXXX-XXXX-XXXX-XXXX`. */
+export declare const OtpBone: import("vue").DefineComponent<{}, {}, any>
+
+/**
+ * ViForm layout of a step with the options of a passkey (e.g. `passkeys/add`): the ceremony in the browser, with a
+ * name for a new passkey; every other step as the default layout.
+ */
+export declare const PasskeyLayout: import("vue").DefineComponent<{}, {}, any>
+
+export interface LoginMethod {
+  /** where the method starts, e.g. "/json/user/password/login" */
+  url: string
+  label: string
+  /** module of the method, e.g. "password" */
+  name: string
+}
+
+/**
+ * Acts for the LoginLayout of *viform* (provide "viurLogin"): chooses the method, follows the server when it chose
+ * the only one, posts a passkey assertion or Google token, and runs OAuth on the backend's page.
+ */
+export declare function useLoginMethods(
+  viform: import("vue").Ref<any>,
+  options?: {
+    /** false while the form runs something else; default: always */
+    enabled?: () => boolean
+    /** methods the choice leaves out */
+    hidden?: (method: LoginMethod) => boolean
+    /** a method failed to load */
+    onError?: (error: unknown) => void
+    /** origin of the backend (default: VITE_API_URL) */
+    base?: string
+    /** client id for Google One Tap in place of the redirect; default: the configuration's, null: the redirect */
+    googleClientId?: () => string | null
+    /** links of the app below the submit of the password form ("lost password", the registration) */
+    passwordLinks?: () => Array<{ name: string; label: string; click: () => void; class?: string }>
+    /** the method whose form the choice opens right away, the others below it (default "password"); null: buttons only */
+    directMethod?: string | null
+  }
+): {
+  formState: import("vue").ComputedRef<any>
+  /** the choice of the method or the passkey: their buttons act, hide the form's action bar */
+  hideActions: import("vue").ComputedRef<boolean>
+  /** a method was chosen out of several: offer "choose another method" */
+  otherMethods: import("vue").ComputedRef<boolean>
+  /** the form of user name and password: where "lost password" and the registration belong */
+  atPasswordLogin: import("vue").ComputedRef<boolean>
+  chooseMethod: (url: string) => Promise<void>
+  showMethods: () => Promise<unknown> | undefined
+}
 
 // ─── Translations ─────────────────────────────────────────────────────────────
 

@@ -107,6 +107,18 @@ export function isEnvelopeV2(data) {
 }
 
 /**
+ * True if `data` is an envelope as viur-core 4 sends it: it always carries
+ * `steps` and `step_status` (`null` when there are none). A v1 body of
+ * viur-core 3.9 lifted by `normalizeEnvelope` never has them, so this works on
+ * normalized bodies, too.
+ * @param {*} data
+ * @returns {boolean}
+ */
+export function isViur4Envelope(data) {
+  return isEnvelopeV2(data) && "steps" in data && "step_status" in data
+}
+
+/**
  * Map a classic v1 `action` string (+ errors) to a v2 `(action, status)` pair.
  * Inverse of vi-vue-utils' `v1ActionString`.
  *

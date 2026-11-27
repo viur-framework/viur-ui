@@ -20,6 +20,11 @@ export interface ViFormProps {
    * `false` keeps this form silent. Default: true.
    */
   useMessageStore?: boolean
+  /**
+   * Show a failed request above the actions: "<status> <title>" and the
+   * description of viur-core's error body (see RequestError). Default: false.
+   */
+  showError?: boolean
   /** Ready-made structure/values instead of a request. */
   skel?: Record<string, any> | string | null
   structure?: Record<string, any> | unknown[] | null

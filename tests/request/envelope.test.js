@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { normalizeEnvelope, isEnvelopeV2, v1SelectionFollow } from "../../src/request/envelope.js"
+import { normalizeEnvelope, isEnvelopeV2, isViur4Envelope, v1SelectionFollow } from "../../src/request/envelope.js"
 
 describe("isEnvelopeV2", () => {
   it("detects the JSON number version 2", () => {
@@ -16,6 +16,26 @@ describe("isEnvelopeV2", () => {
     expect(isEnvelopeV2([1, 2, 3])).toBe(false)
     expect(isEnvelopeV2(null)).toBe(false)
     expect(isEnvelopeV2("str")).toBe(false)
+  })
+})
+
+describe("isViur4Envelope", () => {
+  const VIUR4 = { version: 2, action: "login", status: "init", step: null, step_status: null, steps: null }
+
+  it("detects the envelope of viur-core 4, also after normalizing", () => {
+    expect(isViur4Envelope(VIUR4)).toBe(true)
+    expect(isViur4Envelope(normalizeEnvelope(VIUR4))).toBe(true)
+  })
+
+  it("is false for a v1 body of viur-core 3.9, raw or lifted to v2", () => {
+    const v1 = { action: "select_authentication_provider", structure: {}, values: {} }
+    expect(isViur4Envelope(v1)).toBe(false)
+    expect(isViur4Envelope(normalizeEnvelope(v1))).toBe(false)
+  })
+
+  it("is false for a v2 body without steps and step_status", () => {
+    expect(isViur4Envelope({ version: 2, action: "login", status: "init" })).toBe(false)
+    expect(isViur4Envelope(null)).toBe(false)
   })
 })
 

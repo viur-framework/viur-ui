@@ -34,6 +34,19 @@ export {
   notify,
 } from "./src/request/index.js"
 
+// Display of a failed request (status, title, description of viur-core's error body)
+export { default as RequestError } from "./src/components/RequestError/RequestError.vue"
+
+// Login of viur-core 4 in a ViForm: the layout (method choice, password form,
+// passkey, Google One Tap) and the composable it acts through (see src/auth/)
+export { default as LoginLayout } from "./src/auth/LoginLayout.vue"
+// one-time codes of second factors: form layout and bone widget (wa-otp-input)
+export { default as OtpLayout } from "./src/auth/OtpLayout.vue"
+export { default as OtpBone } from "./src/auth/OtpBone.vue"
+// passkeys in a ViForm: signing in with one, adding one (passkeys/add)
+export { default as PasskeyLayout } from "./src/auth/PasskeyLayout.vue"
+export { useLoginMethods } from "./src/auth/useLoginMethods.js"
+
 // Theme (brand color from the configuration)
 export { useColorStore, hexToHsl, BRAND_LIGHTNESS } from "./src/theme/colorStore.js"
 

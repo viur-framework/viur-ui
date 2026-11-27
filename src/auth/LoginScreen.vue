@@ -135,53 +135,105 @@
 
         <!-- Otherwise the login flow is driven generically by the multistep
              form: it GET-renders /user/login and walks the v2 status/follow
-             chain (chooser → userpassword → 2FA → success). -->
-        <ViForm
-          v-else
-          ref="viform"
-          module="user"
-          :action="action"
-          :secure="true"
-          multistep
-          :renderer="renderer ?? undefined"
-          :version="version ?? undefined"
-          :show-steps="showSteps"
-          :submit-label="t('login.login')"
-          @success="onFormSuccess"
-          @failed="onFailed"
-        >
-          <!-- Pass the form's own slots through so an app can supply its own
-               chrome (e.g. its own action bar). Only forwarded when the consumer provides the
-               slot, otherwise ViForm keeps its default. -->
-          <template
-            v-if="$slots.actions"
-            #actions="actionProps"
+             chain (chooser → userpassword → 2FA → success). viur-core 4
+             also runs the password recovery there, as the action
+             "password/recover" (recover → recover_code → recover_password).
+             For viur-core 4 the LoginLayout renders the choice of the login
+             method as buttons, from the answer of the action "login". -->
+        <template v-else>
+          <p
+            v-if="state.notice"
+            class="viur-login__notice"
           >
-            <slot
-              name="actions"
-              v-bind="actionProps"
-            />
+            {{ t(state.notice) }}
+          </p>
+          <ViForm
+            :key="state.flow ? flowAction : 'login'"
+            ref="viform"
+            module="user"
+            :action="flowAction"
+            :layout="state.viur4 && !state.flow ? LoginLayout : undefined"
+            :secure="true"
+            multistep
+            show-error
+            :renderer="renderer ?? undefined"
+            :version="version ?? undefined"
+            :show-steps="showSteps"
+            :submit-label="t(state.flow ? FLOWS[state.flow].submit : 'login.login')"
+            @success="state.flow ? onFlowSuccess() : onFormSuccess()"
+            @failed="onFailed"
+          >
+            <!-- Pass the form's own slots through so an app can supply its own
+                 chrome (e.g. its own action bar). Only forwarded when the consumer provides the
+                 slot, otherwise ViForm keeps its default. The choice of the
+                 login method has no action bar: its buttons choose (an empty
+                 slot would fall back to ViForm's bar, so it renders a stand-in). -->
+            <template
+              v-if="$slots.actions || hideActions"
+              #actions="actionProps"
+            >
+              <span
+                v-if="hideActions"
+                class="viur-login__no-actions"
+              ></span>
+              <slot
+                v-else
+                name="actions"
+                v-bind="actionProps"
+              />
+            </template>
+          </ViForm>
+          <wa-button
+            v-if="otherMethods"
+            appearance="plain"
+            size="small"
+            class="viur-login__back viur-login__methods"
+            @click="showMethods"
+          >
+            {{ t("login.other_method") }}
+          </wa-button>
+          <!-- viur-core 4: the password recovery and the self-registration -->
+          <template v-if="state.viur4">
+            <wa-button
+              v-if="canResendCode"
+              appearance="plain"
+              size="small"
+              class="viur-login__resend"
+              @click="resendCode"
+            >
+              {{ t("login.register_resend") }}
+            </wa-button>
+            <wa-button
+              v-if="state.flow"
+              appearance="plain"
+              size="small"
+              class="viur-login__back"
+              @click="endFlow"
+            >
+              {{ t("login.back") }}
+            </wa-button>
           </template>
-        </ViForm>
+        </template>
 
-        <!-- Google is the one provider that isn't a form step (Identity SDK
-             token), so it lives beside the form. Only hidden in the later
-             classic steps, so the rendered button survives "back". -->
-        <template v-if="effectiveGoogleClientId">
+        <!-- core 3.9: Google is the one provider that isn't a form step
+             (Identity SDK token), so it lives beside the form. Only hidden in
+             the later classic steps, so the rendered button survives "back".
+             viur-core 4: the LoginLayout shows it among the methods. -->
+        <template v-if="effectiveGoogleClientId && !state.viur4">
           <div
-            v-show="state.view === 'start'"
+            v-show="state.view === 'start' && !state.flow && atLoginStart"
             class="viur-login__sep"
           >
             {{ t("login.or") }}
           </div>
           <div
-            v-show="state.view === 'start'"
+            v-show="state.view === 'start' && !state.flow && atLoginStart"
             ref="googleBtn"
             class="viur-login__google"
           ></div>
           <p
             v-if="googleError"
-            v-show="state.view === 'start'"
+            v-show="state.view === 'start' && !state.flow && atLoginStart"
             class="viur-login__error"
           >
             {{ googleError }}
@@ -193,15 +245,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from "vue"
+import { ref, reactive, computed, onMounted, nextTick, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import ViForm from "../forms/ViForm.vue"
 import { useRouter } from "vue-router"
-import { useUserStore } from "./store.js"
+import { useUserStore } from "../user/store.js"
 import { useConfigStore } from "../request/configStore.js"
 import { normalizeStructure } from "../request/skel.js"
 import { resetState } from "../request/request.js"
+import { isViur4Envelope } from "../request/envelope.js"
 import { renderGoogleButton } from "./google.js"
+import LoginLayout from "./LoginLayout.vue"
+import { useLoginMethods } from "./useLoginMethods.js"
 
 /** Image setting → url, as the old admin resolved them: absolute urls stay,
  *  "/…" is a path on the backend, anything else an asset of the app. */
@@ -211,6 +266,34 @@ function assetUrl(value) {
   if (value.startsWith("/")) return `${import.meta.env.VITE_API_URL ?? ""}${value}`
   return `${import.meta.env.BASE_URL ?? "/"}${value}`
 }
+
+// viur-core 4: the password recovery and the self-registration, actions below
+// the `user` module. The link in their mails enters at the step that takes the
+// code (`codeAction`, the code as `param`).
+const FLOWS = {
+  recover: {
+    action: "password/recover",
+    codeAction: "password/recover_code",
+    param: "recovery_key",
+    prop: "recoveryKey",
+    submit: "login.recovery_start",
+    done: "login.recovery_done",
+  },
+  register: {
+    action: "password/register",
+    codeAction: "password/register_verify",
+    param: "verification_key",
+    prop: "verificationKey",
+    submit: "login.register",
+    done: "login.register_done",
+  },
+}
+// sends a new code of the registration; it belongs to the step register_verify
+const REGISTER_RESEND_ACTION = "password/register_resend"
+const REGISTER_VERIFY_STEP = "password/register_verify"
+// where the token of the Google SDK goes, below `user`: viur-core 3.9 and 4
+const GOOGLE_LOGIN_ENDPOINT_3 = "auth_googleaccount/login"
+const GOOGLE_LOGIN_ENDPOINT_4 = "google/one_tap"
 
 // classic chain (viur-core 3.9): submit label and failure message per view
 const CLASSIC_VIEWS = {
@@ -246,6 +329,16 @@ const props = defineProps({
   showSteps: { type: Boolean, default: false },
   // offer "lost password?" next to the password login
   lostPassword: { type: Boolean, default: true },
+  // viur-core 4: code of the password recovery from its mail. Omit to take
+  // `?recovery_key=` of the page url (removed from it once read); set it when
+  // the app keeps the query elsewhere (e.g. in the hash of a hash router).
+  recoveryKey: { type: String, default: null },
+  // viur-core 4: offer the self-registration. Omit to follow the server
+  // ("admin.user.registration" of /json/config); `false` never offers it.
+  register: { type: Boolean, default: null },
+  // viur-core 4: code of the registration from its mail, like `recoveryKey`
+  // (`?verification_key=` of the page url).
+  verificationKey: { type: String, default: null },
   // check for an existing session on mount (and skip login if authenticated)
   autoStart: { type: Boolean, default: true },
   // Where to go once the session stands (also when `autoStart` finds an
@@ -265,6 +358,11 @@ const router = useRouter()
 const state = reactive({
   classic: false, // viur-core 3.9: /user/login answered with the provider choice
   loadError: false, // /user/login could not be loaded at all
+  viur4: false, // viur-core 4: /user/login answered with its envelope (steps, step_status)
+  flow: null, // viur-core 4: the multistep form runs "recover" or "register" instead of the login
+  flowCode: null, // viur-core 4: code from the mail of the flow, it starts at the step that takes it
+  resend: false, // viur-core 4: the registration sends a new code (register_resend)
+  notice: null, // i18n key of a message above the multistep form
   view: "start", // "start" | "provider" | "otp" | "recover" | "secondfactor" | "done"
   providers: [], // [{ name, target, label }] offered by /user/login
   secondFactors: [], // [{ name, target, label }] offered after the password
@@ -318,6 +416,115 @@ async function onFormSuccess() {
 
 function onFailed(error) {
   emit("error", error)
+}
+
+// ── choice of the login method (viur-core 4) ──────────────────────────────────
+
+const {
+  formState,
+  hideActions,
+  otherMethods,
+  showMethods: loadMethods,
+} = useLoginMethods(viform, {
+  enabled: () => state.viur4 && !state.flow,
+  // the LoginLayout shows Google One Tap in place of the Google redirect
+  googleClientId: () => effectiveGoogleClientId.value,
+  // the password recovery and the self-registration, below the submit of the password form
+  passwordLinks: () =>
+    [
+      props.lostPassword && {
+        name: "lost-password",
+        label: t("login.lost_password"),
+        class: "viur-login__lost",
+        click: () => startFlow("recover"),
+      },
+      registration.value && {
+        name: "register",
+        label: t("login.no_account"),
+        class: "viur-login__register",
+        click: () => startFlow("register"),
+      },
+    ].filter(Boolean),
+  onError: (error) => emit("error", error),
+})
+
+/** core 3.9: before a second factor, where the Google button beside the form belongs. */
+const atLoginStart = computed(() => {
+  if (!state.viur4) return true
+  const form = formState.value
+  if (!form?.step || form.step === "login") return true
+  const keys = Object.keys(form.steps ?? {})
+  return keys.length === 0 || keys[0] === form.step
+})
+
+/** Back to the choice of the login method. */
+function showMethods() {
+  state.notice = null
+  return loadMethods()
+}
+
+// ── password recovery and registration (viur-core 4) ──────────────────────────
+
+/** The action of the form: the login, or the step a flow starts at. */
+const flowAction = computed(() => {
+  const flow = FLOWS[state.flow]
+  if (!flow) return props.action
+  if (state.flow === "register" && state.resend) return REGISTER_RESEND_ACTION
+  return state.flowCode ? `${flow.codeAction}?${flow.param}=${encodeURIComponent(state.flowCode)}` : flow.action
+})
+
+/** The server allows the self-registration, unless the app says otherwise. */
+const registration = computed(() => state.viur4 && (props.register ?? configStore.registrationEnabled))
+
+/** The form asks for the code of the registration: a new one can be sent. */
+const canResendCode = computed(
+  () =>
+    state.flow === "register" &&
+    formState.value?.step === REGISTER_VERIFY_STEP &&
+    !!formState.value?.structure?.["verification_key"]
+)
+
+/** The code from the mail of a flow: its prop, else its parameter of the page
+ *  url, which is removed from it so a reload or a shared link doesn't carry it. */
+function takeFlowCode(flow) {
+  if (props[flow.prop]) return props[flow.prop]
+  const url = new URL(window.location.href)
+  const code = url.searchParams.get(flow.param)
+  if (!code) return null
+  url.searchParams.delete(flow.param)
+  window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash)
+  return code
+}
+
+/** Run a flow in the form instead of the login, at its first step or at the
+ *  step that takes the code from its mail. */
+function startFlow(name, code = null) {
+  state.notice = null
+  state.flowCode = code
+  state.resend = false
+  state.flow = name
+}
+
+/** Back to the login. */
+function endFlow() {
+  state.notice = null
+  state.flowCode = null
+  state.resend = false
+  state.flow = null
+}
+
+/** Send a new code of the registration; the form continues at its step. */
+function resendCode() {
+  if (state.resend) return viform.value?.loadStep().catch((error) => emit("error", error))
+  state.flowCode = null
+  state.resend = true
+}
+
+/** The flow is done (password set, account registered): back to the login. */
+function onFlowSuccess() {
+  const done = FLOWS[state.flow].done
+  endFlow()
+  state.notice = done
 }
 
 /**
@@ -397,6 +604,11 @@ async function startClassic() {
     return
   }
   state.loadError = false
+  state.viur4 = isViur4Envelope(body)
+  // viur-core 4 takes the token of the Google SDK at user/google/one_tap
+  if (state.viur4 && store.state.googleLoginEndpoint === GOOGLE_LOGIN_ENDPOINT_3) {
+    store.configure({ googleLoginEndpoint: GOOGLE_LOGIN_ENDPOINT_4 })
+  }
   if (!String(body?.["action"] ?? "").startsWith("select_authentication_provider")) return
   state.classic = true
   state.providers = selectOptions(body)
@@ -514,7 +726,7 @@ async function onGoogleToken(token) {
 }
 
 async function mountGoogleButton() {
-  if (checking.value || store.isLoggedIn || !effectiveGoogleClientId.value) return
+  if (checking.value || store.isLoggedIn || !effectiveGoogleClientId.value || state.viur4) return
   try {
     await nextTick()
     await renderGoogleButton(googleBtn.value, effectiveGoogleClientId.value, onGoogleToken)
@@ -540,6 +752,16 @@ onMounted(async () => {
       }
     }
     await startClassic()
+    // viur-core 4: the link in the mail of a flow continues it
+    if (state.viur4) {
+      for (const [name, flow] of Object.entries(FLOWS)) {
+        const code = takeFlowCode(flow)
+        if (code) {
+          startFlow(name, code)
+          break
+        }
+      }
+    }
     await mountGoogleButton()
   } finally {
     checking.value = false
@@ -650,6 +872,13 @@ onMounted(async () => {
 
 .viur-login__lost {
   align-self: flex-end;
+}
+
+.viur-login__notice {
+  margin: 0;
+  color: var(--wa-color-success-on-quiet, #15803d);
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 .viur-login__error {

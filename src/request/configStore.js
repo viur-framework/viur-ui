@@ -10,7 +10,10 @@ import { reactive, computed, markRaw } from "vue"
 //
 //   • ANONYMOUS: the public `configuration` map — the `conf.admin.*` settings
 //     (dotted keys, e.g. "admin.name"), the Google OAuth client id under
-//     "admin.user.google.clientID" (only when configured), the current
+//     "admin.user.google.clientID" (only when configured), "admin.user.registration"
+//     (viur-core 4, only when the self-registration is enabled),
+//     "admin.user.second_factor_setup" (viur-core 4, only when users may add
+//     second factors themselves), the current
 //     "admin.language" and the available "admin.languages". The login screen
 //     needs this BEFORE it renders, e.g. to decide whether Google sign-in is
 //     offered at all.
@@ -362,6 +365,10 @@ export const useConfigStore = defineStore("viurConfig", () => {
   const isAdminLoaded = computed(() => state.status === "admin")
   const googleClientId = computed(() => state.configuration["admin.user.google.clientID"] ?? null)
   const hasGoogleLogin = computed(() => !!googleClientId.value)
+  /** viur-core 4: the password login allows the self-registration. */
+  const registrationEnabled = computed(() => state.configuration["admin.user.registration"] === true)
+  /** viur-core 4: signed-in users may add second factors (authenticator app, passkeys, recovery codes). */
+  const secondFactorSetupEnabled = computed(() => state.configuration["admin.user.second_factor_setup"] === true)
   const language = computed(() => state.configuration["admin.language"] ?? null)
   const languages = computed(() => state.configuration["admin.languages"] ?? [])
   const moduleNames = computed(() => Object.keys(state.modules ?? {}))
@@ -496,6 +503,8 @@ export const useConfigStore = defineStore("viurConfig", () => {
     isAdminLoaded,
     googleClientId,
     hasGoogleLogin,
+    registrationEnabled,
+    secondFactorSetupEnabled,
     language,
     languages,
     moduleNames,

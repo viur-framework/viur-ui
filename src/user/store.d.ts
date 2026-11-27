@@ -22,6 +22,11 @@ export interface UserStoreState {
   /** Renderer for the requests (default: VITE_DEFAULT_RENDERER or "json"). */
   renderer: string
   googleClientId: string | null
+  /**
+   * Endpoint below `user` that `loginWithGoogle` posts the token to:
+   * "auth_googleaccount/login" (viur-core 3.9, default) or "google/one_tap" (viur-core 4).
+   */
+  googleLoginEndpoint: string
 }
 
 /**
@@ -39,7 +44,7 @@ export interface UserStore {
   hasAccess: (right: string) => boolean
   /** Short form of the name for UIs, "-" without a user. */
   shortName: string
-  configure: (options?: { renderer?: string; googleClientId?: string | null }) => void
+  configure: (options?: { renderer?: string; googleClientId?: string | null; googleLoginEndpoint?: string }) => void
   /** Load the session. Yields null if nobody is logged in (401). */
   fetchSelf: () => Promise<UserSkelValues | null>
   logout: () => Promise<void>

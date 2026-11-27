@@ -56,6 +56,9 @@ export const useUserStore = defineStore("viurUser", () => {
     status: "unknown", // "unknown" | "loading" | "authenticated" | "anonymous"
     renderer: DEFAULT_RENDERER,
     googleClientId: null,
+    // where loginWithGoogle posts the token, below `user`: viur-core 3.9 "auth_googleaccount/login",
+    // viur-core 4 "google/one_tap"
+    googleLoginEndpoint: "auth_googleaccount/login",
   })
 
   const userUrl = (endpoint) => `/${state.renderer}/user/${endpoint}`
@@ -75,9 +78,10 @@ export const useUserStore = defineStore("viurUser", () => {
     return u.lastname || u.firstname || u.name || "-"
   })
 
-  function configure({ renderer, googleClientId } = {}) {
+  function configure({ renderer, googleClientId, googleLoginEndpoint } = {}) {
     if (renderer) state.renderer = renderer
     if (googleClientId !== undefined) state.googleClientId = googleClientId
+    if (googleLoginEndpoint) state.googleLoginEndpoint = googleLoginEndpoint
   }
 
   // ── session ──────────────────────────────────────────────────────────────────
@@ -154,7 +158,7 @@ export const useUserStore = defineStore("viurUser", () => {
   // Returns null on a transport error.
   async function loginWithGoogle(token) {
     try {
-      const body = await apiRequest(userUrl("auth_googleaccount/login"), {
+      const body = await apiRequest(userUrl(state.googleLoginEndpoint), {
         method: "POST",
         secure: true,
         data: { token },

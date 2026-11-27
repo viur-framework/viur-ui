@@ -26,9 +26,10 @@ vi.mock("../../src/forms/ViForm.vue", () => ({
 vi.mock("vue-i18n", () => ({ useI18n: () => ({ t: (key) => key }) }))
 vi.mock("vue-router", () => ({ useRouter: () => undefined }))
 
-const { default: LoginScreen } = await import("../../src/user/LoginScreen.vue")
+const { default: LoginScreen } = await import("../../src/auth/LoginScreen.vue")
 
 const PASSWORD_URL = "/json/user/auth_userpassword/login"
+const RECOVER_URL = "/json/user/auth_userpassword/pwrecover"
 const OTP_URL = "/json/user/f2_authenticatorotp/authenticator_otp"
 
 function jsonResponse(data, status = 200) {
@@ -57,6 +58,9 @@ function stubFetch() {
           structure: { provider: { type: "select", values: { [PASSWORD_URL]: "Password" } } },
           values: {},
         })
+      }
+      if (path === RECOVER_URL) {
+        return jsonResponse({ action: "pwrecover", structure: { name: {} }, values: {} })
       }
       if (path === PASSWORD_URL) {
         return jsonResponse({ action: "edit", structure: { name: {}, password: {} }, values: {} })
@@ -135,6 +139,19 @@ describe("LoginScreen lost password", () => {
     const root = mountScreen()
     await vi.waitFor(() => expect(root.querySelector(".viform-stub")).not.toBeNull())
     expect(root.querySelector(".viur-login__lost")).not.toBeNull()
+  })
+
+  it("opens pwrecover of viur-core 3.9", async () => {
+    stubFetch()
+    const root = mountScreen()
+    await vi.waitFor(() => expect(root.querySelector(".viur-login__lost")).not.toBeNull())
+
+    root.querySelector(".viur-login__lost").dispatchEvent(new Event("click"))
+
+    await vi.waitFor(() =>
+      expect(fetch.mock.calls.some(([url]) => new URL(String(url)).pathname === RECOVER_URL)).toBe(true)
+    )
+    await vi.waitFor(() => expect(root.textContent).toContain("login.recovery_start"))
   })
 
   it("hides the recovery with lostPassword false", async () => {

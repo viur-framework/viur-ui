@@ -110,7 +110,8 @@ export function useFormUtils(props, state) {
         // right away, not only on the next input.
         logics()
       } else if (values !== undefined) {
-        state.skel = values
+        // no values (`data: null`): an empty skeleton, the bones still write to it
+        state.skel = values ?? {}
       }
       state.list = null
     }
@@ -156,6 +157,12 @@ export function useFormUtils(props, state) {
     try {
       await fetchResult.execute()
       applyResponseState(fetchResult.data.value, { updateStructure: true, presetValues: true })
+      // a step without a structure (a passkey challenge, an OAuth start) has no
+      // bones: the ones of the previous step must not stay in the form
+      if (fetchResult.data.value?.["structure"] == null && state.datatype !== "list") {
+        state.structure = {}
+        updateCategories()
+      }
       // A v1 step carries no target (no `follow`, no next_url, no
       // params.action_url) — there the step is sent back to the SAME URL
       // it was rendered from. Without this, postUrl would be
@@ -302,10 +309,18 @@ export function useFormUtils(props, state) {
     return formdata
   }
 
-  function sendData(alternativUrl = null, additionalData = null, headers = null, removeKeyFromDataset = true) {
+  // `withForm: false` sends only `additionalData`, not the bones of the form
+  // (e.g. the response of a passkey ceremony on a step without a structure).
+  function sendData(
+    alternativUrl = null,
+    additionalData = null,
+    headers = null,
+    removeKeyFromDataset = true,
+    { withForm = true } = {}
+  ) {
     state.loading = true
     // No <form> element in list mode — nothing to validate.
-    let isValid = state.viformelement && !props.novalidate ? state.viformelement.reportValidity() : true
+    let isValid = withForm && state.viformelement && !props.novalidate ? state.viformelement.reportValidity() : true
     if (!isValid) {
       state.loading = false
       return new Promise((resolve, reject) => reject("Form is not valid"))
@@ -319,7 +334,7 @@ export function useFormUtils(props, state) {
     })
 
     const formData = new FormData()
-    for (const bone of toFormData()) {
+    for (const bone of withForm ? toFormData() : []) {
       for (const [k, v] of Object.entries(bone)) {
         let val = v
         if ([undefined, null].includes(v)) {

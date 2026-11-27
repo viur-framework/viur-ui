@@ -17,6 +17,11 @@ beforeEach(() => {
 })
 
 describe("bone registry", () => {
+  it("shows raw.svg as an image, not as markup in a text field", () => {
+    expect(getBoneWidget("raw.svg").__name).toBe("svgBone")
+    expect(getBoneWidget("raw").__name).toBe("rawBone")
+  })
+
   it("picks the longest matching widget prefix, not the first registered", () => {
     const tree = widget("tree")
     const file = widget("file")

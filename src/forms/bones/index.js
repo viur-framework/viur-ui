@@ -1,4 +1,5 @@
 import rawBone from "./widgets/rawBone.vue"
+import svgBone from "./widgets/svgBone.vue"
 import keyBone from "./widgets/keyBone.vue"
 import stringBone from "./widgets/stringBone.vue"
 import emailBone from "./widgets/emailBone.vue"
@@ -130,6 +131,8 @@ export const useBoneStore = defineStore("boneStore", () => {
       return relationalBoneSelect
     } else if (boneType === "relational" || boneType.startsWith("relational.")) {
       return relationalBone
+    } else if (boneType === "raw.svg") {
+      return svgBone
     } else if (boneType === "raw.json") {
       return jsonBone
     } else if (boneType.startsWith("raw.code.")) {

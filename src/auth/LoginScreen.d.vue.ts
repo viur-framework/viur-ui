@@ -33,6 +33,23 @@ export interface LoginScreenProps {
   showSteps?: boolean
   /** Offer "lost password?" next to the password login (default: true). */
   lostPassword?: boolean
+  /**
+   * viur-core 4: code of the password recovery from its mail; the recovery
+   * then starts at `password/recover_code`. Omit to take `?recovery_key=` of
+   * the page url (removed from it once read).
+   */
+  recoveryKey?: string | null
+  /**
+   * viur-core 4: offer the self-registration. Omit to follow the server
+   * ("admin.user.registration" of /json/config); `false` never offers it.
+   */
+  register?: boolean | null
+  /**
+   * viur-core 4: code of the registration from its mail; the registration then
+   * starts at `password/register_verify`. Omit to take `?verification_key=` of
+   * the page url (removed from it once read).
+   */
+  verificationKey?: string | null
   /** On mount, check for an existing session and skip the login. */
   autoStart?: boolean
   /**

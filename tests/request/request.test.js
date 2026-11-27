@@ -72,6 +72,27 @@ describe("HTTPError", () => {
   it("uses statusText as message when message is omitted", () => {
     const err = new HTTPError(500, "Internal Server Error")
     expect(err.message).toBe("Internal Server Error")
+    expect(err.title).toBeNull()
+    expect(err.descr).toBeNull()
+  })
+
+  it("carries title and descr of viur-core's error body", async () => {
+    const body = {
+      status: 406,
+      reason: "Not Acceptable",
+      title: "Not Acceptable",
+      descr: "Second factor required but not configured for this user.",
+    }
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(body, 406)))
+
+    const result = useViewFetch("user", "/", {})
+    await waitUntilFinished(result)
+
+    expect(result.error.value).toBeInstanceOf(HTTPError)
+    expect(result.error.value.statusCode).toBe(406)
+    expect(result.error.value.title).toBe("Not Acceptable")
+    expect(result.error.value.descr).toBe("Second factor required but not configured for this user.")
+    expect(result.error.value.message).toBe("Second factor required but not configured for this user.")
   })
 })
 
